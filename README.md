@@ -40,7 +40,7 @@ kubernetes-controller.lemonldap-ng.org/location-rules: |
 
 Which ensures that the user is authentified.
 
-See also [LemonLDAP::NG documentation]](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#rules).
+See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#rules).
 
 ### exported-headers
 
@@ -60,4 +60,4 @@ kubernetes-controller.lemonldap-ng.org/exported-headers: |
   }
 ```
 
-See also [LemonLDAP::NG documentation]](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#headers).
+See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#headers).
