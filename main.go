@@ -21,9 +21,9 @@ import (
 )
 
 func main() {
-    cmd.Execute()
+	cmd.Execute()
 }
 
 func init() {
-    cmd.Init()
+	cmd.Init()
 }

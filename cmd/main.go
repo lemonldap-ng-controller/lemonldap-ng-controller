@@ -23,8 +23,8 @@ import (
 
 	"github.com/golang/glog"
 
-	kubeinformers "k8s.io/client-go/informers"
 	corev1 "k8s.io/api/core/v1"
+	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
@@ -71,5 +71,5 @@ func Init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 
-    flag.StringVar(&watchNamespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces")
+	flag.StringVar(&watchNamespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces")
 }
