@@ -26,6 +26,7 @@ if [ "$(pwd)" != "$GOPATH/src/github.com/lemonldap-ng-controller/lemonldap-ng-co
 fi
 
 for entry in \
+  'k8s.io/ingress-nginx/.github/* .github' \
   'k8s.io/ingress-nginx/hack/kube-env.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-all.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
@@ -35,6 +36,7 @@ for entry in \
 do
   src="$GOPATH/src/$(echo $entry | awk '{print $1}')"
   dst_dir="$(echo $entry | awk '{print $2}')"
+  mkdir -p $dst_dir
   cp $src $dst_dir/
 done
 
