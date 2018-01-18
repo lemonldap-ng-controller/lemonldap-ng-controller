@@ -22,10 +22,17 @@ GOARCH = ${ARCH}
 .PHONY: all
 all: build
 
+BUILDTAGS=
+
 build:
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
 	    -ldflags "-s -w" \
 	    -o ./lemonldap-ng-controller ${PKG}/cmd
+
+.PHONY: test
+test:
+	@echo "+ $@"
+	go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
 .PHONY: verify-all
 verify-all:
