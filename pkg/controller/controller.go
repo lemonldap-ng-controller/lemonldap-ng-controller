@@ -56,6 +56,7 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
+// NewIngressController returns a new ingress controller
 func NewIngressController(kclient *kubernetes.Clientset, namespace string) *IngressController {
 	ingressWatcher := &IngressController{}
 
