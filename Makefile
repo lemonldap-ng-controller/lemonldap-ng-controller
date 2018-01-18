@@ -26,3 +26,7 @@ build:
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
 	    -ldflags "-s -w" \
 	    -o ./lemonldap-ng-controller ${PKG}/cmd
+
+.PHONY: verify-all
+verify-all:
+	@./hack/verify-all.sh

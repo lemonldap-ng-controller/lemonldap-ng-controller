@@ -26,6 +26,10 @@ if [ "$(pwd)" != "$GOPATH/src/github.com/lemonldap-ng-controller/lemonldap-ng-co
 fi
 
 for entry in \
+  'k8s.io/ingress-nginx/hack/kube-env.sh hack' \
+  'k8s.io/ingress-nginx/hack/verify-all.sh hack' \
+  'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
+  'k8s.io/ingress-nginx/hack/verify-golint.sh hack' \
   'k8s.io/sample-controller/LICENSE .' \
   'k8s.io/sample-controller/pkg/signals/*.go pkg/signals'
 do
