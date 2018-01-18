@@ -1,17 +1,43 @@
-language: go
+dist: trusty
 
-go_import_path: github.com/lemonldap-ng-controller/lemonldap-ng-controller
+sudo: required
+
+services:
+  - docker
+
+language: go
 
 go:
   - 1.9.2
 
+go_import_path: github.com/lemonldap-ng-controller/lemonldap-ng-controller
+
+env:
+  global:
+  - DOCKER=docker
+  matrix:
+  - ARCH=amd64
+  - ARCH=arm
+  - ARCH=arm64
+  - ARCH=ppc64le
+  - ARCH=s390x
+
+stages:
+  - Static Check
+  - Build
+
 jobs:
   include:
   - stage: Static Check
-    script:
+    env:
+    - ARCH=amd64
+    install:
     - go get github.com/golang/lint/golint
-    - make verify-all
-  - stage: Build
     script:
-    - go get -t -v ./...
-    - make
+    - make verify-all
+
+stage: Build
+install:
+- go get -t -v ./...
+script:
+- make sub-container-$ARCH
