@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package main
 
 import (
 	"flag"
@@ -40,7 +40,7 @@ var (
 	watchNamespace string
 )
 
-func Execute() {
+func main() {
 	flag.Parse()
 
 	// set up signals so we handle the first shutdown signal gracefully
@@ -67,7 +67,7 @@ func Execute() {
 	}
 }
 
-func Init() {
+func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 

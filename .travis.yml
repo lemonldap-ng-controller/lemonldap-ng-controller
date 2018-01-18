@@ -5,4 +5,8 @@ go_import_path: github.com/lemonldap-ng-controller/lemonldap-ng-controller
 go:
   - 1.9.2
 
-script: go build
+install:
+- go get -t ./...
+
+script:
+- make
