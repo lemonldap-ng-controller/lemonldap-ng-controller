@@ -1,3 +1,4 @@
+# Copyright 2017 The Kubernetes Authors.
 # Copyright 2018 Mathieu Parent <math.parent@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +13,137 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.PHONY: all
+all: all-container
+
+BUILDTAGS=
+
+# Use the 0.0 tag for testing, it shouldn't clobber any release builds
+TAG?=0.0.1
+REGISTRY?=lemonldapng
 GOOS?=linux
+DOCKER?=gcloud docker --
+SED_I?=sed -i
+GOHOSTOS ?= $(shell go env GOHOSTOS)
+
+ifeq ($(GOHOSTOS),darwin)
+  SED_I=sed -i ''
+endif
 
 PKG=github.com/lemonldap-ng-controller/lemonldap-ng-controller
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
+DUMB_ARCH = ${ARCH}
 
-.PHONY: all
-all: build
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
-build:
+QEMUVERSION=v2.9.1-1
+
+IMGNAME = lemonldap-ng-controller
+IMAGE = $(REGISTRY)/$(IMGNAME)
+MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
+
+# Set default base image dynamically for each arch
+BASEIMAGE?=gcr.io/google-containers/debian-base-$(ARCH):0.3
+
+ifeq ($(ARCH),arm)
+	QEMUARCH=arm
+	GOARCH=arm
+	DUMB_ARCH=armhf
+endif
+ifeq ($(ARCH),arm64)
+    QEMUARCH=aarch64
+endif
+ifeq ($(ARCH),ppc64le)
+	QEMUARCH=ppc64le
+	GOARCH=ppc64le
+	DUMB_ARCH=ppc64el
+endif
+ifeq ($(ARCH),s390x)
+    QEMUARCH=s390x
+endif
+
+TEMP_DIR := $(shell mktemp -d)
+
+DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
+
+.PHONY: image-info
+image-info:
+	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
+
+.PHONY: sub-container-%
+sub-container-%:
+	$(MAKE) ARCH=$* build container
+
+.PHONY: sub-push-%
+sub-push-%:
+	$(MAKE) ARCH=$* push
+
+.PHONY: all-container
+all-container: $(addprefix sub-container-,$(ALL_ARCH))
+
+.PHONY: all-push
+all-push: $(addprefix sub-push-,$(ALL_ARCH))
+
+.PHONY: container
+container: .container-$(ARCH)
+
+.PHONY: .container-$(ARCH)
+.container-$(ARCH):
+	cp -RP ./* $(TEMP_DIR)
+	$(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' $(DOCKERFILE)
+	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
+	$(SED_I) "s|DUMB_ARCH|$(DUMB_ARCH)|g" $(DOCKERFILE)
+
+ifeq ($(ARCH),amd64)
+	# When building "normally" for amd64, remove the whole line, it has no part in the amd64 image
+	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
+else
+	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
+	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
+	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
+	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
+endif
+
+	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+
+.PHONY: push
+push: .push-$(ARCH)
+
+.PHONY: .push-$(ARCH)
+.push-$(ARCH):
+	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
+ifeq ($(ARCH), amd64)
+	$(DOCKER) push $(IMAGE):$(TAG)
+endif
+
+.PHONY: clean
+clean:
+	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
+
+.PHONY: build
+build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
-	    -ldflags "-s -w" \
-	    -o ./lemonldap-ng-controller ${PKG}/cmd
+		-ldflags "-s -w" \
+		-o ${TEMP_DIR}/rootfs/lemonldap-ng-controller ${PKG}/cmd
 
 .PHONY: verify-all
 verify-all:
 	@./hack/verify-all.sh
+
+.PHONY: test
+test:
+	@echo "+ $@"
+	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
+
+.PHONY: release
+release: all-container all-push
+	echo "done"
+
+.PHONY: docker-build
+docker-build: all-container
+
+.PHONY: docker-push
+docker-push: all-push
