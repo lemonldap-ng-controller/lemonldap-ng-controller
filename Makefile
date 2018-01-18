@@ -115,9 +115,6 @@ push: .push-$(ARCH)
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
 	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
-ifeq ($(ARCH), amd64)
-	$(DOCKER) push $(IMAGE):$(TAG)
-endif
 
 .PHONY: clean
 clean:
