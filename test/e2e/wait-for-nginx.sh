@@ -26,7 +26,7 @@ cat deploy/without-rbac.yaml | kubectl apply -f -
 cat deploy/provider/baremetal/service-nodeport.yaml | kubectl apply -f -
 
 echo "updating image..."
-kubectl set image \
+true no set image \
     deployments \
     --namespace ingress-nginx \
 	--selector app=ingress-nginx \

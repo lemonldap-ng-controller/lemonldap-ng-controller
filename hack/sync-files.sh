@@ -49,4 +49,7 @@ do
   cp $src $dst_dir/
 done
 
+# Keep original image
+sed -i 's@^kubectl set image@true no set image@' test/e2e/wait-for-nginx.sh
+
 # ex: ts=2 sw=2 et filetype=sh
