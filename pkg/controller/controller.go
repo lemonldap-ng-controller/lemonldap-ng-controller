@@ -44,7 +44,7 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 	defer utilruntime.HandleCrash()
 
 	// Start the informer factories to begin populating the informer caches
-	glog.Info("Starting Foo controller")
+	glog.Info("Starting LemonLDAP::NG controller")
 
 	glog.Info("Starting workers")
 	go c.ingressInformer.Run(stopCh)
@@ -90,5 +90,5 @@ func (c *IngressController) ingressAdded(obj interface{}) {
 	ingressNamespace := ingressObj.Namespace
 	ingressName := ingressObj.Name
 
-	glog.Infof("An ingress was created: %s", ingressNamespace, ingressName)
+	glog.Infof("An ingress was created: %s/%s", ingressNamespace, ingressName)
 }
