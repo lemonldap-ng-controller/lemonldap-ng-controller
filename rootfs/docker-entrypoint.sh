@@ -3,7 +3,7 @@
 usage() {
    echo "$0 features:" >&2
    echo '  - If set, use $SSODOMAIN environment variable to set domain name' >&2
-   echo '  - setup llng-fastcgi-server envs and dirs
+   echo '  - setup llng-fastcgi-server envs and dirs' >&2
 }
 
 if [ "$1" = '--help' ]; then
