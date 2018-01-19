@@ -12,7 +12,7 @@ It is intended to be used with the [NGINX Ingress Controller](https://github.com
 
 ## Ingress Annotations
 
-The following annotations are ~~supported~~ planned:
+The following annotations are supported:
 
 | Name                                                                        | type |
 |-----------------------------------------------------------------------------|------|

@@ -38,6 +38,7 @@ var (
 	masterURL      string
 	kubeconfig     string
 	watchNamespace string
+	llngConfigDir  string
 )
 
 func main() {
@@ -58,7 +59,7 @@ func main() {
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 
-	ingressController := controller.NewIngressController(kubeClient, watchNamespace)
+	ingressController := controller.NewIngressController(kubeClient, watchNamespace, llngConfigDir)
 
 	go kubeInformerFactory.Start(stopCh)
 
@@ -71,5 +72,6 @@ func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 
-	flag.StringVar(&watchNamespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces")
+	flag.StringVar(&watchNamespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces.")
+	flag.StringVar(&llngConfigDir, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory.")
 }
