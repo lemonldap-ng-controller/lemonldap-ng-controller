@@ -17,9 +17,11 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang/glog"
+	"gopkg.in/yaml.v2"
 
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,12 +30,15 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
 )
 
 // IngressController watches the kubernetes api for changes to ingresses
 type IngressController struct {
 	ingressInformer cache.SharedIndexInformer
 	kclient         *kubernetes.Clientset
+	llngConfig      *config.Config
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -57,8 +62,9 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 }
 
 // NewIngressController returns a new ingress controller
-func NewIngressController(kclient *kubernetes.Clientset, namespace string) *IngressController {
+func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngConfigDir string) *IngressController {
 	ingressWatcher := &IngressController{}
+	ingressWatcher.llngConfig = config.NewConfig(llngConfigDir)
 
 	// Create informer for watching Ingresses
 	ingressInformer := cache.NewSharedIndexInformer(
@@ -76,7 +82,9 @@ func NewIngressController(kclient *kubernetes.Clientset, namespace string) *Ingr
 	)
 
 	ingressInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: ingressWatcher.ingressAdded,
+		AddFunc:    ingressWatcher.ingressAdded,
+		DeleteFunc: ingressWatcher.ingressDeleted,
+		UpdateFunc: ingressWatcher.ingressUpdated,
 	})
 
 	ingressWatcher.kclient = kclient
@@ -85,10 +93,86 @@ func NewIngressController(kclient *kubernetes.Clientset, namespace string) *Ingr
 	return ingressWatcher
 }
 
-func (c *IngressController) ingressAdded(obj interface{}) {
+// parseIngress returns the ingress namespace, the ingress name, and a map of VHosts
+func (c *IngressController) parseIngress(obj interface{}) (string, string, map[string]*config.VHost, error) {
 	ingressObj := obj.(*extensionsv1beta1.Ingress)
 	ingressNamespace := ingressObj.Namespace
 	ingressName := ingressObj.Name
+	ingressAnnotations := ingressObj.GetAnnotations()
+	vhosts := make(map[string]*config.VHost)
 
+	locationRulesAnnotation := "kubernetes-controller.lemonldap-ng.org/location-rules"
+	locationRules := make(map[string]string)
+	locationRulesYaml, ok := ingressAnnotations[locationRulesAnnotation]
+	if ok {
+		err := yaml.Unmarshal([]byte(locationRulesYaml), &locationRules)
+		if err != nil {
+			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse locationRules annotation %s of Ingress %s/%s, ignoring Ingress: %s", locationRulesAnnotation, ingressNamespace, ingressName, err)
+		}
+	} else {
+		locationRules = config.DefaultLocationRules
+	}
+
+	exportedHeadersAnnotation := "kubernetes-controller.lemonldap-ng.org/exported-headers"
+	exportedHeaders := make(map[string]string)
+	exportedHeadersYaml, ok := ingressAnnotations[exportedHeadersAnnotation]
+	if ok {
+		err := yaml.Unmarshal([]byte(exportedHeadersYaml), &exportedHeaders)
+		if err != nil {
+			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse exportedHeaders annotation %s of Ingress %s/%s, ignoring Ingress: %s", exportedHeadersAnnotation, ingressNamespace, ingressName, err)
+		}
+	} else {
+		exportedHeaders = config.DefaultExportedHeaders
+	}
+
+	for _, rule := range ingressObj.Spec.Rules {
+		serverName := rule.Host
+		if serverName == "" || serverName == "*" {
+			serverName = "default"
+		}
+		if rule.HTTP == nil {
+			continue
+		}
+		vhosts[serverName] = config.NewVHost(serverName, locationRules, exportedHeaders)
+	}
+	return ingressNamespace, ingressName, vhosts, nil
+}
+
+func (c *IngressController) ingressAdded(obj interface{}) {
+	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
+	if err != nil {
+		glog.Error(err)
+		return
+	}
 	glog.Infof("An ingress was created: %s/%s", ingressNamespace, ingressName)
+	c.llngConfig.AddVhosts(vhosts)
+	c.llngConfig.Save() // FIXME async + batch
+}
+
+func (c *IngressController) ingressDeleted(obj interface{}) {
+	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+	glog.Infof("An ingress was deleted: %s/%s", ingressNamespace, ingressName)
+	c.llngConfig.DeleteVhosts(vhosts)
+	c.llngConfig.Save() // FIXME async + batch
+}
+
+func (c *IngressController) ingressUpdated(old, cur interface{}) {
+	_, _, oldVhosts, oldErr := c.parseIngress(cur)
+	if oldErr != nil {
+		glog.Error(oldErr)
+		return
+	}
+	curIngressNamespace, curIngressName, curVhosts, curErr := c.parseIngress(cur)
+	if curErr != nil {
+		glog.Error(curErr)
+		return
+	}
+	glog.Infof("An ingress was updated: %s/%s", curIngressNamespace, curIngressName)
+	c.llngConfig.DeleteVhosts(oldVhosts)
+	c.llngConfig.AddVhosts(curVhosts)
+	c.llngConfig.Save() // FIXME async + batch
 }
