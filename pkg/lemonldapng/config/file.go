@@ -85,7 +85,7 @@ func (c *Config) next() (string, int, error) {
 		return "", 0, err
 	}
 	nextConfigNum := lastConfigNum + 1
-	nextConfigName := fmt.Sprintf("lmConf-%i.js", nextConfigNum)
+	nextConfigName := fmt.Sprintf("lmConf-%d.js", nextConfigNum)
 	return nextConfigName, nextConfigNum, nil
 }
 
