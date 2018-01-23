@@ -36,9 +36,10 @@ import (
 
 // IngressController watches the kubernetes api for changes to ingresses
 type IngressController struct {
-	ingressInformer cache.SharedIndexInformer
-	kclient         *kubernetes.Clientset
-	llngConfig      *config.Config
+	kclient                *kubernetes.Clientset
+	llngConfig             *config.Config
+	ingressCacheStore      cache.Store
+	ingressCacheController cache.Controller
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -52,7 +53,7 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 	glog.Info("Starting LemonLDAP::NG controller")
 
 	glog.Info("Starting workers")
-	go c.ingressInformer.Run(stopCh)
+	go c.ingressCacheController.Run(stopCh)
 
 	glog.Info("Started workers")
 	<-stopCh
@@ -64,10 +65,16 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 // NewIngressController returns a new ingress controller
 func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngConfigDir string) *IngressController {
 	ingressWatcher := &IngressController{}
+	ingressWatcher.kclient = kclient
 	ingressWatcher.llngConfig = config.NewConfig(llngConfigDir)
 
+	ingEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc:    ingressWatcher.ingressAdded,
+		DeleteFunc: ingressWatcher.ingressDeleted,
+		UpdateFunc: ingressWatcher.ingressUpdated,
+	}
 	// Create informer for watching Ingresses
-	ingressInformer := cache.NewSharedIndexInformer(
+	ingressWatcher.ingressCacheStore, ingressWatcher.ingressCacheController = cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				return kclient.ExtensionsV1beta1().Ingresses(namespace).List(options)
@@ -78,17 +85,8 @@ func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngC
 		},
 		&extensionsv1beta1.Ingress{},
 		3*time.Minute,
-		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		ingEventHandler,
 	)
-
-	ingressInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    ingressWatcher.ingressAdded,
-		DeleteFunc: ingressWatcher.ingressDeleted,
-		UpdateFunc: ingressWatcher.ingressUpdated,
-	})
-
-	ingressWatcher.kclient = kclient
-	ingressWatcher.ingressInformer = ingressInformer
 
 	return ingressWatcher
 }
