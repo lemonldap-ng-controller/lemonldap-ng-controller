@@ -28,16 +28,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
+	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
 )
 
 // IngressController watches the kubernetes api for changes to ingresses
 type IngressController struct {
-	kclient                *kubernetes.Clientset
-	llngConfig             *config.Config
+	controllerConfig       *Configuration
+	llngConfig             *llngconfig.Config
 	ingressCacheStore      cache.Store
 	ingressCacheController cache.Controller
 }
@@ -63,10 +62,10 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 }
 
 // NewIngressController returns a new ingress controller
-func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngConfigDir string) *IngressController {
+func NewIngressController(controllerConfig *Configuration) *IngressController {
 	ingressWatcher := &IngressController{}
-	ingressWatcher.kclient = kclient
-	ingressWatcher.llngConfig = config.NewConfig(llngConfigDir)
+	ingressWatcher.controllerConfig = controllerConfig
+	ingressWatcher.llngConfig = llngconfig.NewConfig(controllerConfig.LemonLDAPConfigurationDirectory)
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc:    ingressWatcher.ingressAdded,
@@ -77,10 +76,10 @@ func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngC
 	ingressWatcher.ingressCacheStore, ingressWatcher.ingressCacheController = cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return kclient.ExtensionsV1beta1().Ingresses(namespace).List(options)
+				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return kclient.ExtensionsV1beta1().Ingresses(namespace).Watch(options)
+				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).Watch(options)
 			},
 		},
 		&extensionsv1beta1.Ingress{},
@@ -92,12 +91,12 @@ func NewIngressController(kclient *kubernetes.Clientset, namespace string, llngC
 }
 
 // parseIngress returns the ingress namespace, the ingress name, and a map of VHosts
-func (c *IngressController) parseIngress(obj interface{}) (string, string, map[string]*config.VHost, error) {
+func (c *IngressController) parseIngress(obj interface{}) (string, string, map[string]*llngconfig.VHost, error) {
 	ingressObj := obj.(*extensionsv1beta1.Ingress)
 	ingressNamespace := ingressObj.Namespace
 	ingressName := ingressObj.Name
 	ingressAnnotations := ingressObj.GetAnnotations()
-	vhosts := make(map[string]*config.VHost)
+	vhosts := make(map[string]*llngconfig.VHost)
 
 	locationRulesAnnotation := "kubernetes-controller.lemonldap-ng.org/location-rules"
 	locationRules := make(map[string]string)
@@ -108,7 +107,7 @@ func (c *IngressController) parseIngress(obj interface{}) (string, string, map[s
 			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse locationRules annotation %s of Ingress %s/%s, ignoring Ingress: %s", locationRulesAnnotation, ingressNamespace, ingressName, err)
 		}
 	} else {
-		locationRules = config.DefaultLocationRules
+		locationRules = llngconfig.DefaultLocationRules
 	}
 
 	exportedHeadersAnnotation := "kubernetes-controller.lemonldap-ng.org/exported-headers"
@@ -120,7 +119,7 @@ func (c *IngressController) parseIngress(obj interface{}) (string, string, map[s
 			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse exportedHeaders annotation %s of Ingress %s/%s, ignoring Ingress: %s", exportedHeadersAnnotation, ingressNamespace, ingressName, err)
 		}
 	} else {
-		exportedHeaders = config.DefaultExportedHeaders
+		exportedHeaders = llngconfig.DefaultExportedHeaders
 	}
 
 	for _, rule := range ingressObj.Spec.Rules {
@@ -131,7 +130,7 @@ func (c *IngressController) parseIngress(obj interface{}) (string, string, map[s
 		if rule.HTTP == nil {
 			continue
 		}
-		vhosts[serverName] = config.NewVHost(serverName, locationRules, exportedHeaders)
+		vhosts[serverName] = llngconfig.NewVHost(serverName, locationRules, exportedHeaders)
 	}
 	return ingressNamespace, ingressName, vhosts, nil
 }
