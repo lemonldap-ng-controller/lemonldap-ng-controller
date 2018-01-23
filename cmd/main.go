@@ -35,10 +35,7 @@ import (
 )
 
 var (
-	masterURL      string
-	kubeconfig     string
-	watchNamespace string
-	llngConfigDir  string
+	config *controller.Configuration
 )
 
 func main() {
@@ -47,19 +44,19 @@ func main() {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
-	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+	cfg, err := clientcmd.BuildConfigFromFlags(config.APIServerHost, config.KubeConfigFile)
 	if err != nil {
 		glog.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
+	config.Client, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
 		glog.Fatalf("Error building kubernetes clientset: %s", err.Error())
 	}
 
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(config.Client, time.Second*30)
 
-	ingressController := controller.NewIngressController(kubeClient, watchNamespace, llngConfigDir)
+	ingressController := controller.NewIngressController(config)
 
 	go kubeInformerFactory.Start(stopCh)
 
@@ -69,9 +66,13 @@ func main() {
 }
 
 func init() {
-	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
+	config := &controller.Configuration{}
+	flag.StringVar(&config.APIServerHost, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+	flag.StringVar(&config.KubeConfigFile, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 
-	flag.StringVar(&watchNamespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces.")
-	flag.StringVar(&llngConfigDir, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory.")
+	flag.StringVar(&config.ConfigMapName, "configmap", "", "Name of the ConfigMap that contains the custom configuration to use")
+	flag.DurationVar(&config.ResyncPeriod, "sync-period", 600*time.Second, "Relist and confirm cloud resources this often. Default is 10 minutes")
+	flag.StringVar(&config.Namespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces.")
+	flag.BoolVar(&config.ForceNamespaceIsolation, "force-namespace-isolation", false, "Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace.")
+	flag.StringVar(&config.LemonLDAPConfigurationDirectory, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory.")
 }

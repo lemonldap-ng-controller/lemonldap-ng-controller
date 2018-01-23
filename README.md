@@ -61,3 +61,25 @@ kubernetes-controller.lemonldap-ng.org/exported-headers: |
 ```
 
 See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#headers).
+
+## Config Map
+
+A config map can be used to override lmConf-1.js parameters.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lemonldap-ng-configuration
+  namespace: ingress-nginx
+data:
+  lmConf.js: |
+    domain: example.org
+```
+
+You'll need to add the following to args:
+```yaml
+- --configmap=ingress-nginx/lemonldap-ng-configuration
+```
+
+See also [LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/parameterlist).

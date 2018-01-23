@@ -32,6 +32,7 @@ var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)
 // Config defines a LemonLDAP::NG configuration loader
 type Config struct {
 	configDir string
+	overrides map[string]interface{}
 	vhosts    map[string]*VHost
 	dirty     bool
 }
@@ -40,6 +41,7 @@ type Config struct {
 func NewConfig(configDir string) *Config {
 	return &Config{
 		configDir: configDir,
+		overrides: make(map[string]interface{}),
 		vhosts:    make(map[string]*VHost),
 	}
 }
@@ -125,6 +127,9 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
+	for overridek, overridev := range c.overrides {
+		conf[overridek] = overridev
+	}
 	conf["cfgAuthor"] = "lemonldap-ng-controller"
 	conf["cfgNum"] = nextConfigNum
 	allExportedHeaders, ok := conf["exportedHeaders"].(map[string]interface{})
@@ -148,6 +153,13 @@ func (c *Config) Save() error {
 		return fmt.Errorf("Unable to write LemonLDAP::NG configuration file %s: %s", path, err)
 	}
 	c.dirty = false
+	return nil
+}
+
+// SetOverrides creates several new LemonLDAP::NG virtual hosts
+func (c *Config) SetOverrides(overrides map[string]interface{}) error {
+	c.overrides = overrides
+	c.dirty = true
 	return nil
 }
 
