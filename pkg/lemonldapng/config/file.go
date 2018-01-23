@@ -131,9 +131,13 @@ func (c *Config) Save() error {
 	if !ok {
 		glog.Fatal("exportedHeaders should be a map")
 	}
+	allLocationRules, ok := conf["locationRules"].(map[string]interface{})
+	if !ok {
+		glog.Fatal("locationRules should be a map")
+	}
 	for serverName, vhost := range c.vhosts {
 		allExportedHeaders[serverName] = vhost.ExportedHeaders
-		//conf["locationRules"][serverName] = vhost.LocationRules
+		allLocationRules[serverName] = vhost.LocationRules
 	}
 	content, err := json.MarshalIndent(conf, "", "   ")
 	if err != nil {
