@@ -18,16 +18,14 @@ package controller
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
 
+	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/fields"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
@@ -35,10 +33,12 @@ import (
 
 // IngressController watches the kubernetes api for changes to ingresses
 type IngressController struct {
-	controllerConfig       *Configuration
-	llngConfig             *llngconfig.Config
-	ingressCacheStore      cache.Store
-	ingressCacheController cache.Controller
+	controllerConfig         *Configuration
+	llngConfig               *llngconfig.Config
+	ingressCacheStore        cache.Store
+	ingressCacheController   cache.Controller
+	configMapCacheStore      cache.Store
+	configMapCacheController cache.Controller
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -53,6 +53,7 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 
 	glog.Info("Starting workers")
 	go c.ingressCacheController.Run(stopCh)
+	go c.configMapCacheController.Run(stopCh)
 
 	glog.Info("Started workers")
 	<-stopCh
@@ -67,25 +68,30 @@ func NewIngressController(controllerConfig *Configuration) *IngressController {
 	ingressWatcher.controllerConfig = controllerConfig
 	ingressWatcher.llngConfig = llngconfig.NewConfig(controllerConfig.LemonLDAPConfigurationDirectory)
 
+	watchNs := corev1.NamespaceAll
+	if controllerConfig.ForceNamespaceIsolation && controllerConfig.Namespace != corev1.NamespaceAll {
+		watchNs = controllerConfig.Namespace
+	}
+
+	// Create informer for watching Ingresses
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc:    ingressWatcher.ingressAdded,
 		DeleteFunc: ingressWatcher.ingressDeleted,
 		UpdateFunc: ingressWatcher.ingressUpdated,
 	}
-	// Create informer for watching Ingresses
 	ingressWatcher.ingressCacheStore, ingressWatcher.ingressCacheController = cache.NewInformer(
-		&cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).Watch(options)
-			},
-		},
-		&extensionsv1beta1.Ingress{},
-		3*time.Minute,
-		ingEventHandler,
-	)
+		cache.NewListWatchFromClient(controllerConfig.Client.ExtensionsV1beta1().RESTClient(), "ingresses", controllerConfig.Namespace, fields.Everything()),
+		&extensionsv1beta1.Ingress{}, controllerConfig.ResyncPeriod, ingEventHandler)
+
+	// Create informer for watching ConfigMaps
+	mapEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc:    ingressWatcher.configMapAdded,
+		DeleteFunc: ingressWatcher.configMapDeleted,
+		UpdateFunc: ingressWatcher.configMapUpdated,
+	}
+	ingressWatcher.configMapCacheStore, ingressWatcher.configMapCacheController = cache.NewInformer(
+		cache.NewListWatchFromClient(controllerConfig.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
+		&corev1.ConfigMap{}, controllerConfig.ResyncPeriod, mapEventHandler)
 
 	return ingressWatcher
 }
@@ -172,4 +178,40 @@ func (c *IngressController) ingressUpdated(old, cur interface{}) {
 	c.llngConfig.DeleteVhosts(oldVhosts)
 	c.llngConfig.AddVhosts(curVhosts)
 	c.llngConfig.Save() // FIXME async + batch
+}
+
+func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
+	configMapObj := obj.(*corev1.ConfigMap)
+	configMapKey := fmt.Sprintf("%s/%s", configMapObj.Namespace, configMapObj.Name)
+	if configMapKey == c.controllerConfig.ConfigMapName {
+		glog.Infof("A ConfigMap was %s: %s", verb, configMapKey)
+		if verb == "deleted" {
+			c.llngConfig.SetOverrides(make(map[string]interface{}))
+			c.llngConfig.Save() // FIXME async + batch
+			return
+		}
+		lmConfYaml, ok := configMapObj.Data["lmConf.js"]
+		lmConf := make(map[string]interface{})
+		if !ok {
+			glog.Errorf("Missing key in ConfigMap %s: lmConf.js")
+		}
+		err := yaml.Unmarshal([]byte(lmConfYaml), &lmConf)
+		if err != nil {
+			glog.Errorf("Unable to parse lmConf.js of ConfigMap %s, ignoring Ingress: %s", configMapKey, err)
+		}
+		c.llngConfig.SetOverrides(lmConf)
+		c.llngConfig.Save() // FIXME async + batch
+	}
+}
+
+func (c *IngressController) configMapAdded(obj interface{}) {
+	c.configMapSmurfed(obj, "added")
+}
+
+func (c *IngressController) configMapDeleted(obj interface{}) {
+	c.configMapSmurfed(obj, "deleted")
+}
+
+func (c *IngressController) configMapUpdated(old, cur interface{}) {
+	c.configMapSmurfed(cur, "updated")
 }

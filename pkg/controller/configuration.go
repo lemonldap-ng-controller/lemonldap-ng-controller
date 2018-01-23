@@ -17,15 +17,20 @@ limitations under the License.
 package controller
 
 import (
+	"time"
+
 	clientset "k8s.io/client-go/kubernetes"
 )
 
+// Configuration stores lemonldap-ng-controller configuration
 type Configuration struct {
 	APIServerHost  string
 	KubeConfigFile string
 	Client         clientset.Interface
 
-	ConfigMapName  string
+	ResyncPeriod time.Duration
+
+	ConfigMapName string
 
 	Namespace string
 
