@@ -152,6 +152,7 @@ func (c *IngressController) ingressAdded(obj interface{}) {
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)
+		return
 	}
 }
 
@@ -166,6 +167,7 @@ func (c *IngressController) ingressDeleted(obj interface{}) {
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)
+		return
 	}
 }
 
@@ -186,6 +188,7 @@ func (c *IngressController) ingressUpdated(old, cur interface{}) {
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)
+		return
 	}
 }
 
@@ -199,6 +202,7 @@ func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
 			err := c.llngConfig.Save() // FIXME async + batch
 			if err != nil {
 				glog.Error(err)
+				return
 			}
 			return
 		}
@@ -206,15 +210,18 @@ func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
 		lmConf := make(map[string]interface{})
 		if !ok {
 			glog.Errorf("Missing key in ConfigMap %s: lmConf.js")
+			return
 		}
 		err := yaml.Unmarshal([]byte(lmConfYaml), &lmConf)
 		if err != nil {
 			glog.Errorf("Unable to parse lmConf.js of ConfigMap %s, ignoring Ingress: %s", configMapKey, err)
+			return
 		}
 		c.llngConfig.SetOverrides(lmConf)
 		err = c.llngConfig.Save() // FIXME async + batch
 		if err != nil {
 			glog.Error(err)
+			return
 		}
 	}
 }
