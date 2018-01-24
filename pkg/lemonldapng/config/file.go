@@ -146,7 +146,7 @@ func (c *Config) Save() error {
 	}
 	content, err := json.MarshalIndent(conf, "", "   ")
 	if err != nil {
-		return fmt.Errorf("Unable to encode LemonLDAP::NG configuration file %s: %s", nextConfigNum, err)
+		return fmt.Errorf("Unable to encode LemonLDAP::NG configuration file %s: %s", nextConfigName, err)
 	}
 	err = c.fs.WriteFile(path, content, 0777)
 	if err != nil {
