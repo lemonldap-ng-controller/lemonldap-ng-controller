@@ -83,3 +83,37 @@ You'll need to add the following to args:
 ```
 
 See also [LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/parameterlist).
+
+## Command line flags
+
+```
+Usage of /lemonldap-ng-controller:
+  -alsologtostderr
+    	log to standard error as well as files
+  -configmap string
+    	Name of the ConfigMap that contains the custom configuration to use
+  -force-namespace-isolation
+    	Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace.
+  -kubeconfig string
+    	Path to a kubeconfig. Only required if out-of-cluster.
+  -lemonldap-ng-configuration-directory string
+    	LemonLDAP::NG configuration directory. (default "/var/lib/lemonldap-ng/conf")
+  -log_backtrace_at value
+    	when logging hits line file:N, emit a stack trace
+  -log_dir string
+    	If non-empty, write log files in this directory
+  -logtostderr
+    	log to standard error instead of files
+  -master string
+    	The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.
+  -stderrthreshold value
+    	logs at or above this threshold go to stderr
+  -sync-period duration
+    	Relist and confirm cloud resources this often. Default is 10 minutes (default 10m0s)
+  -v value
+    	log level for V logs
+  -vmodule value
+    	comma-separated list of pattern=N settings for file-filtered logging
+  -watch-namespace string
+    	Namespace to watch for Ingress. Default is to watch all namespaces.
+```
