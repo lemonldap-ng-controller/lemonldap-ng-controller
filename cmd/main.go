@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	config *controller.Configuration
+	config *controller.Configuration = &controller.Configuration{}
 )
 
 func main() {
@@ -66,7 +66,6 @@ func main() {
 }
 
 func init() {
-	config := &controller.Configuration{}
 	flag.StringVar(&config.APIServerHost, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&config.KubeConfigFile, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 
