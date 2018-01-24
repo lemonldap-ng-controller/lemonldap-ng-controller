@@ -31,11 +31,14 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/controller"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem/os"
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/signals"
 )
 
 var (
-	config *controller.Configuration = &controller.Configuration{}
+	config *controller.Configuration = &controller.Configuration{
+		FS: &os.FileSystem{},
+	}
 )
 
 func main() {

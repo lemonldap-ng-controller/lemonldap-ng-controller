@@ -14,30 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package filesystem
+
+// Inspired by https://talks.golang.org/2012/10things.slide#8
 
 import (
-	"time"
-
-	clientset "k8s.io/client-go/kubernetes"
-
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
+	"os"
 )
 
-// Configuration stores lemonldap-ng-controller configuration
-type Configuration struct {
-	APIServerHost  string
-	KubeConfigFile string
-	Client         clientset.Interface
+// FileSystem interface
+type FileSystem interface {
+	// from "os"
+	Mkdir(name string, perm os.FileMode) error
+	Open(name string) (File, error)
 
-	ResyncPeriod time.Duration
+	// from "io/ioutil"
+	ReadFile(filename string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
 
-	ConfigMapName string
-
-	Namespace string
-
-	ForceNamespaceIsolation bool
-
-	FS                              filesystem.FileSystem
-	LemonLDAPConfigurationDirectory string
+// File interface
+type File interface {
+	Close() error
+	Readdir(int) ([]os.FileInfo, error)
 }

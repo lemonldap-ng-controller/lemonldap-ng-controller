@@ -66,7 +66,7 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 func NewIngressController(controllerConfig *Configuration) *IngressController {
 	ingressWatcher := &IngressController{}
 	ingressWatcher.controllerConfig = controllerConfig
-	ingressWatcher.llngConfig = llngconfig.NewConfig(controllerConfig.LemonLDAPConfigurationDirectory)
+	ingressWatcher.llngConfig = llngconfig.NewConfig(controllerConfig.FS, controllerConfig.LemonLDAPConfigurationDirectory)
 
 	watchNs := corev1.NamespaceAll
 	if controllerConfig.ForceNamespaceIsolation && controllerConfig.Namespace != corev1.NamespaceAll {

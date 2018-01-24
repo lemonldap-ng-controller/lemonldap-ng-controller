@@ -26,17 +26,21 @@ env:
 
 stages:
 - Static Check
+- Test
 - Build
 
 jobs:
   include:
   - stage: Static Check
-    env:
-    - ARCH=amd64
     install:
     - go get github.com/golang/lint/golint
     script:
     - make verify-all
+  - stage: Test
+    install:
+    - go get -t -v ./...
+    script:
+    - make test
 
 stage: Build
 install:

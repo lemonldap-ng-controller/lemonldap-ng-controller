@@ -19,18 +19,19 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"regexp"
 	"strconv"
 
 	"github.com/golang/glog"
+
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
 )
 
 var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)
 
 // Config defines a LemonLDAP::NG configuration loader
 type Config struct {
+	fs        filesystem.FileSystem
 	configDir string
 	overrides map[string]interface{}
 	vhosts    map[string]*VHost
@@ -38,8 +39,9 @@ type Config struct {
 }
 
 // NewConfig creates a new LemonLDAP::NG configuration loader
-func NewConfig(configDir string) *Config {
+func NewConfig(fs filesystem.FileSystem, configDir string) *Config {
 	return &Config{
+		fs:        fs,
 		configDir: configDir,
 		overrides: make(map[string]interface{}),
 		vhosts:    make(map[string]*VHost),
@@ -53,7 +55,7 @@ func (c *Config) first() (string, int, error) {
 
 // last returns the current configuration file name and number
 func (c *Config) last() (string, int, error) {
-	f, err := os.Open(c.configDir)
+	f, err := c.fs.Open(c.configDir)
 	if err != nil {
 		return "", 0, err
 	}
@@ -95,7 +97,7 @@ func (c *Config) next() (string, int, error) {
 func (c *Config) Load(configName string) (map[string]interface{}, error) {
 	conf := make(map[string]interface{})
 	path := c.configDir + "/" + configName
-	content, err := ioutil.ReadFile(path)
+	content, err := c.fs.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to read LemonLDAP::NG configuration file %s: %s", path, err)
 	}
@@ -148,7 +150,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return fmt.Errorf("Unable to encode LemonLDAP::NG configuration file %s: %s", nextConfigNum, err)
 	}
-	err = ioutil.WriteFile(path, content, 0777)
+	err = c.fs.WriteFile(path, content, 0777)
 	if err != nil {
 		return fmt.Errorf("Unable to write LemonLDAP::NG configuration file %s: %s", path, err)
 	}
