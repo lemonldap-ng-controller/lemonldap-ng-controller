@@ -135,3 +135,20 @@ func TestEmptyConfigDir(t *testing.T) {
 		t.Errorf("Expected 'No LemonLDAP::NG configuration file found in /empty', got %q", errSave)
 	}
 }
+
+func TestInvalidLocationRules(t *testing.T) {
+	flag.Set("alsologtostderr", "true")
+	fs := fake.NewFakeFileSystem()
+	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
+
+	errWrite := fs.WriteFile("/var/lib/lemonldap-ng/conf/lmConf-1.js", []byte("{}"), 0755)
+	if errWrite != nil {
+		t.Errorf("%s", errWrite)
+	}
+
+	config.dirty = true
+	errSave2 := config.Save()
+	if errSave2 == nil || errSave2.Error() != "exportedHeaders should be a map, got <nil>" {
+		t.Errorf("Expected 'exportedHeaders should be a map, got <nil>', got %q", errSave2)
+	}
+}

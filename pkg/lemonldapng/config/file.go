@@ -22,8 +22,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/golang/glog"
-
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
 )
 
@@ -136,11 +134,11 @@ func (c *Config) Save() error {
 	conf["cfgNum"] = nextConfigNum
 	allExportedHeaders, ok := conf["exportedHeaders"].(map[string]interface{})
 	if !ok {
-		glog.Fatal("exportedHeaders should be a map")
+		return fmt.Errorf("exportedHeaders should be a map, got %T", conf["exportedHeaders"])
 	}
 	allLocationRules, ok := conf["locationRules"].(map[string]interface{})
 	if !ok {
-		glog.Fatal("locationRules should be a map")
+		return fmt.Errorf("locationRules should be a map, got %T", conf["locationRules"])
 	}
 	for serverName, vhost := range c.vhosts {
 		allExportedHeaders[serverName] = vhost.ExportedHeaders
