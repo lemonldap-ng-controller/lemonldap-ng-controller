@@ -109,12 +109,20 @@ endif
 
 	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
+ifeq ($(ARCH), amd64)
+	# This is for to maintain the backward compatibility
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+endif
+
 .PHONY: push
 push: .push-$(ARCH)
 
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
 	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
+ifeq ($(ARCH), amd64)
+	$(DOCKER) push $(IMAGE):$(TAG)
+endif
 
 .PHONY: clean
 clean:
