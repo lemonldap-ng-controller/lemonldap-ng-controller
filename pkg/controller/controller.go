@@ -209,7 +209,7 @@ func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
 		lmConfYaml, ok := configMapObj.Data["lmConf.js"]
 		lmConf := make(map[string]interface{})
 		if !ok {
-			glog.Errorf("Missing key in ConfigMap %s: lmConf.js")
+			glog.Error("Missing key in ConfigMap: lmConf.js")
 			return
 		}
 		err := yaml.Unmarshal([]byte(lmConfYaml), &lmConf)
