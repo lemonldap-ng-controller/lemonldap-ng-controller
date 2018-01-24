@@ -135,6 +135,13 @@ test:
 	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
+.PHONY: cover
+cover:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
+	gover
+	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken $$COVERALLS_TOKEN
+
 .PHONY: release
 release: all-container all-push
 	echo "done"
