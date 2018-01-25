@@ -50,18 +50,18 @@ func NewConfig(fs filesystem.FileSystem, configDir string) *Config {
 	}
 }
 
-// first returns the first configuration file name and number
-func (c *Config) first() (string, int, error) {
+// First returns the first configuration file name and number
+func (c *Config) First() (string, int, error) {
 	return fmt.Sprintf("lmConf-%d.js", 1), 1, nil
 }
 
-// last returns the current configuration file name and number
-func (c *Config) last() (string, int, error) {
+// Last returns the current configuration file name and number
+func (c *Config) Last() (string, int, error) {
 	return fmt.Sprintf("lmConf-%d.js", c.cfgNum), c.cfgNum, nil
 }
 
-// next returns the following configuration file name and number
-func (c *Config) next() (string, int, error) {
+// Next returns the following configuration file name and number
+func (c *Config) Next() (string, int, error) {
 	return fmt.Sprintf("lmConf-%d.js", c.cfgNum+1), c.cfgNum + 1, nil
 }
 
@@ -90,7 +90,7 @@ func (c *Config) loadNoLock(configName string) (map[string]interface{}, error) {
 
 // LoadFirst loads the first LemonLDAP::NG configuration
 func (c *Config) LoadFirst() (map[string]interface{}, error) {
-	firstConfigName, _, _ := c.first()
+	firstConfigName, _, _ := c.First()
 	return c.Load(firstConfigName)
 }
 
@@ -101,7 +101,7 @@ func (c *Config) Save() error {
 	if !c.dirty {
 		return nil
 	}
-	nextConfigName, nextConfigNum, err := c.next()
+	nextConfigName, nextConfigNum, err := c.Next()
 	if err != nil {
 		return err
 	}
