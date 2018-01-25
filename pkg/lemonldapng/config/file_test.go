@@ -81,6 +81,19 @@ func TestOverrides(t *testing.T) {
 	overrides := make(map[string]interface{})
 	overrides = map[string]interface{}{
 		"domain": "example.org",
+		"exportedHeaders": map[interface{}]interface{}{
+			"foo.example.org": map[interface{}]interface{}{
+				"CAS-User": "$uid",
+			},
+		},
+		"locationRules": map[interface{}]interface{}{
+			"foo.example.org": map[interface{}]interface{}{
+				"default": "$uid eq 'dwho'",
+			},
+		},
+		"arrayOptions": []interface{}{
+			"value",
+		},
 	}
 
 	config.SetOverrides(overrides)
