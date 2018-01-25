@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
@@ -30,12 +31,14 @@ import (
 
 // FakeFileSystem implements FileSystem interface
 type FakeFileSystem struct {
+	sync.RWMutex // protects all FakeFile's entries
+
 	root *FakeFile
 }
 
 // NewFakeFileSystem creates a new FakeFileSystem
 func NewFakeFileSystem() *FakeFileSystem {
-	fs := FakeFileSystem{}
+	fs := &FakeFileSystem{}
 	fs.root = NewFakeFile(fs, nil, "/", 0755, time.Now(), true)
 	fs.Mkdir("/var", 0755)
 	fs.Mkdir("/var/lib", 0755)
@@ -47,11 +50,13 @@ func NewFakeFileSystem() *FakeFileSystem {
 		"locationRules": {}
 	}`)
 	fs.WriteFile("/var/lib/lemonldap-ng/conf/lmConf-1.js", content, 0644)
-	return &fs
+	return fs
 }
 
 // Mkdir creates a new directory with the specified name and permission bits
-func (fs FakeFileSystem) Mkdir(name string, perm os.FileMode) error {
+func (fs *FakeFileSystem) Mkdir(name string, perm os.FileMode) error {
+	fs.Lock()
+	defer fs.Unlock()
 	_, err := fs.root.lookupFile(name, name)
 	if err == nil {
 		return &os.PathError{
@@ -74,36 +79,51 @@ func (fs FakeFileSystem) Mkdir(name string, perm os.FileMode) error {
 }
 
 // Open opens the named file for reading
-func (fs FakeFileSystem) Open(name string) (filesystem.File, error) {
+func (fs *FakeFileSystem) Open(name string) (filesystem.File, error) {
+	fs.RLock()
+	defer fs.RUnlock()
 	return fs.root.lookupFile(name, name)
 }
 
 // ReadFile reads a file and returns the contents
-func (fs FakeFileSystem) ReadFile(filename string) ([]byte, error) {
+func (fs *FakeFileSystem) ReadFile(filename string) ([]byte, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return []byte(""), err
 	}
-	return f.(*FakeFile).content, nil
+	ff := f.(*FakeFile)
+	ff.RLock()
+	defer ff.RUnlock()
+	c := make([]byte, len(ff.content))
+	copy(c, ff.content)
+	return c, nil
 }
 
 // WriteFile reads a file and returns the contents
-func (fs FakeFileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
+func (fs *FakeFileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	f, err := fs.Open(filename)
 	if err != nil {
+		fs.Lock()
+		defer fs.Unlock()
 		fParent, errParent := fs.root.lookupFile(filename, path.Dir(filename))
 		if errParent != nil {
 			return errParent
 		}
 		f = NewFakeFile(fs, fParent, path.Base(filename), perm, time.Now(), false)
 	}
-	f.(*FakeFile).content = data
+	ff := f.(*FakeFile)
+	ff.Lock()
+	defer ff.Unlock()
+	ff.content = make([]byte, len(data))
+	copy(ff.content, data)
 	return nil
 }
 
 // FakeFile implements File interface
 type FakeFile struct {
-	fs      FakeFileSystem
+	sync.RWMutex // protects this FakeFile's content and metadata
+
+	fs      *FakeFileSystem
 	parent  *FakeFile
 	name    string
 	mode    os.FileMode
@@ -114,8 +134,8 @@ type FakeFile struct {
 }
 
 // NewFakeFile creates a new FakeFile
-func NewFakeFile(fs FakeFileSystem, parent *FakeFile, name string, mode os.FileMode, modTime time.Time, isDir bool) *FakeFile {
-	f := &FakeFile{
+func NewFakeFile(fs *FakeFileSystem, parent *FakeFile, name string, mode os.FileMode, modTime time.Time, isDir bool) *FakeFile {
+	ff := &FakeFile{
 		fs:      fs,
 		parent:  parent,
 		name:    name,
@@ -126,50 +146,62 @@ func NewFakeFile(fs FakeFileSystem, parent *FakeFile, name string, mode os.FileM
 		entries: make(map[string]*FakeFile),
 	}
 	if parent != nil {
-		parent.entries[name] = f
+		parent.entries[name] = ff
 	}
-	return f
+	return ff
 }
 
 // Name returns the base name of the file
-func (f FakeFile) Name() string {
-	return f.name
+func (ff *FakeFile) Name() string {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.name
 }
 
 // Size returns the length in bytes
-func (f FakeFile) Size() int64 {
-	return int64(len(f.content))
+func (ff *FakeFile) Size() int64 {
+	ff.RLock()
+	defer ff.RUnlock()
+	return int64(len(ff.content))
 }
 
 // Mode returns the file mode bits
-func (f FakeFile) Mode() os.FileMode {
-	return f.mode
+func (ff *FakeFile) Mode() os.FileMode {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.mode
 }
 
 // ModTime returns the  modification time
-func (f FakeFile) ModTime() time.Time {
-	return f.modTime
+func (ff *FakeFile) ModTime() time.Time {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.modTime
 }
 
 // IsDir returns true if directory
-func (f FakeFile) IsDir() bool {
-	return f.isDir
+func (ff FakeFile) IsDir() bool {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.isDir
 }
 
 // Sys returns the underlying FakeFile
-func (f FakeFile) Sys() interface{} {
-	return f.fs
+func (ff *FakeFile) Sys() interface{} {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.fs
 }
 
-func (f FakeFile) lookupFile(fullpath, relativepath string) (*FakeFile, error) {
+func (ff *FakeFile) lookupFile(fullpath, relativepath string) (*FakeFile, error) {
 	parts := strings.SplitN(relativepath, "/", 2)
-	if f.parent == nil && parts[0] == "" { // root
+	if ff.parent == nil && parts[0] == "" { // root
 		parts = strings.SplitN(parts[1], "/", 2)
 	}
 	if len(parts) == 1 && parts[0] == "" {
-		return &f, nil
+		return ff, nil
 	}
-	if nextEntry, ok := f.entries[parts[0]]; ok {
+	if nextEntry, ok := ff.entries[parts[0]]; ok {
 		if len(parts) == 1 {
 			return nextEntry, nil
 		}
@@ -183,22 +215,24 @@ func (f FakeFile) lookupFile(fullpath, relativepath string) (*FakeFile, error) {
 }
 
 // Close closes the File
-func (f FakeFile) Close() error {
+func (ff *FakeFile) Close() error {
 	return nil
 }
 
 // Readdir reads the contents of the directory associated with file and returns a slice of up to n FileInfo values, as would be returned by Lstat, in directory order
-func (f FakeFile) Readdir(n int) ([]os.FileInfo, error) {
+func (ff *FakeFile) Readdir(n int) ([]os.FileInfo, error) {
 	if n > 0 {
 		return nil, &os.PathError{
 			Op:   "readdir",
-			Path: f.Name(),
+			Path: ff.Name(),
 			Err:  errors.New("Sliced call to Readdir not supported"),
 		}
 	}
-	ret := make([]os.FileInfo, len(f.entries))
+	ff.fs.RLock()
+	defer ff.fs.RUnlock()
+	ret := make([]os.FileInfo, len(ff.entries))
 	i := 0
-	for _, entry := range f.entries {
+	for _, entry := range ff.entries {
 		ret[i] = entry
 		i += 1
 	}
