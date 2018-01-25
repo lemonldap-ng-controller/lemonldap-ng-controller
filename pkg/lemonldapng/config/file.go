@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
+	"sync"
 
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
 )
@@ -29,8 +29,11 @@ var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)
 
 // Config defines a LemonLDAP::NG configuration loader
 type Config struct {
+	sync.RWMutex
+
 	fs        filesystem.FileSystem
 	configDir string
+	cfgNum    int
 	overrides map[string]interface{}
 	vhosts    map[string]*VHost
 	dirty     bool
@@ -41,58 +44,36 @@ func NewConfig(fs filesystem.FileSystem, configDir string) *Config {
 	return &Config{
 		fs:        fs,
 		configDir: configDir,
+		cfgNum:    1,
 		overrides: make(map[string]interface{}),
 		vhosts:    make(map[string]*VHost),
 	}
 }
 
-// first returns the first configuration file name and number
-func (c *Config) first() (string, int, error) {
-	return "lmConf-1.js", 1, nil
+// First returns the first configuration file name and number
+func (c *Config) First() (string, int, error) {
+	return fmt.Sprintf("lmConf-%d.js", 1), 1, nil
 }
 
-// last returns the current configuration file name and number
-func (c *Config) last() (string, int, error) {
-	f, err := c.fs.Open(c.configDir)
-	if err != nil {
-		return "", 0, err
-	}
-	list, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		return "", 0, err
-	}
-	lastConfigNum := 0
-	ret := ""
-	for _, conf := range list {
-		match := validConfigurationName.FindStringSubmatch(conf.Name())
-		if len(match) > 0 {
-			configNum, _ := strconv.Atoi(match[1])
-			if configNum > lastConfigNum {
-				lastConfigNum = configNum
-				ret = conf.Name()
-			}
-		}
-	}
-	if lastConfigNum == 0 {
-		return "", 0, fmt.Errorf("No LemonLDAP::NG configuration file found in %s", c.configDir)
-	}
-	return ret, lastConfigNum, nil
+// Last returns the current configuration file name and number
+func (c *Config) Last() (string, int, error) {
+	return fmt.Sprintf("lmConf-%d.js", c.cfgNum), c.cfgNum, nil
 }
 
-// next returns the following configuration file name and number
-func (c *Config) next() (string, int, error) {
-	_, lastConfigNum, err := c.last()
-	if err != nil {
-		return "", 0, err
-	}
-	nextConfigNum := lastConfigNum + 1
-	nextConfigName := fmt.Sprintf("lmConf-%d.js", nextConfigNum)
-	return nextConfigName, nextConfigNum, nil
+// Next returns the following configuration file name and number
+func (c *Config) Next() (string, int, error) {
+	return fmt.Sprintf("lmConf-%d.js", c.cfgNum+1), c.cfgNum + 1, nil
 }
 
 // Load loads a specific LemonLDAP::NG configuration
 func (c *Config) Load(configName string) (map[string]interface{}, error) {
+	c.RLock()
+	defer c.RUnlock()
+	return c.loadNoLock(configName)
+}
+
+// Load loads a specific LemonLDAP::NG configuration
+func (c *Config) loadNoLock(configName string) (map[string]interface{}, error) {
 	conf := make(map[string]interface{})
 	path := c.configDir + "/" + configName
 	content, err := c.fs.ReadFile(path)
@@ -109,21 +90,23 @@ func (c *Config) Load(configName string) (map[string]interface{}, error) {
 
 // LoadFirst loads the first LemonLDAP::NG configuration
 func (c *Config) LoadFirst() (map[string]interface{}, error) {
-	firstConfigName, _, _ := c.first()
+	firstConfigName, _, _ := c.First()
 	return c.Load(firstConfigName)
 }
 
 // Save saves the current LemonLDAP::NG configuration as next
 func (c *Config) Save() error {
+	c.Lock()
+	defer c.Unlock()
 	if !c.dirty {
 		return nil
 	}
-	nextConfigName, nextConfigNum, err := c.next()
+	nextConfigName, nextConfigNum, err := c.Next()
 	if err != nil {
 		return err
 	}
 	path := c.configDir + "/" + nextConfigName
-	conf, err := c.LoadFirst()
+	conf, err := c.loadNoLock("lmConf-1.js")
 	if err != nil {
 		return err
 	}
@@ -152,6 +135,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return fmt.Errorf("Unable to write LemonLDAP::NG configuration file %s: %s", path, err)
 	}
+	c.cfgNum += 1
 	c.dirty = false
 	return nil
 }
@@ -184,6 +168,8 @@ func stringifyYAMLMapKeys(in interface{}) interface{} {
 
 // SetOverrides creates several new LemonLDAP::NG virtual hosts
 func (c *Config) SetOverrides(overrides map[string]interface{}) error {
+	c.Lock()
+	defer c.Unlock()
 	m := map[string]interface{}{}
 	for k, v := range overrides {
 		m[k] = stringifyYAMLMapKeys(v)
@@ -195,6 +181,8 @@ func (c *Config) SetOverrides(overrides map[string]interface{}) error {
 
 // AddVhosts creates several new LemonLDAP::NG virtual hosts
 func (c *Config) AddVhosts(vhosts map[string]*VHost) error {
+	c.Lock()
+	defer c.Unlock()
 	for _, vhost := range vhosts {
 		c.vhosts[vhost.ServerName] = &VHost{
 			vhost.ServerName,
@@ -208,6 +196,8 @@ func (c *Config) AddVhosts(vhosts map[string]*VHost) error {
 
 // DeleteVhosts deletes several LemonLDAP::NG virtual hosts
 func (c *Config) DeleteVhosts(vhosts map[string]*VHost) error {
+	c.Lock()
+	defer c.Unlock()
 	for _, vhost := range vhosts {
 		delete(c.vhosts, vhost.ServerName)
 	}

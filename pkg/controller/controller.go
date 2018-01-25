@@ -24,8 +24,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/fields"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
@@ -80,7 +82,14 @@ func NewIngressController(controllerConfig *Configuration) *IngressController {
 		UpdateFunc: ingressWatcher.ingressUpdated,
 	}
 	ingressWatcher.ingressCacheStore, ingressWatcher.ingressCacheController = cache.NewInformer(
-		cache.NewListWatchFromClient(controllerConfig.Client.ExtensionsV1beta1().RESTClient(), "ingresses", controllerConfig.Namespace, fields.Everything()),
+		&cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).List(options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				return controllerConfig.Client.ExtensionsV1beta1().Ingresses(controllerConfig.Namespace).Watch(options)
+			},
+		},
 		&extensionsv1beta1.Ingress{}, controllerConfig.ResyncPeriod, ingEventHandler)
 
 	// Create informer for watching ConfigMaps
@@ -90,7 +99,14 @@ func NewIngressController(controllerConfig *Configuration) *IngressController {
 		UpdateFunc: ingressWatcher.configMapUpdated,
 	}
 	ingressWatcher.configMapCacheStore, ingressWatcher.configMapCacheController = cache.NewInformer(
-		cache.NewListWatchFromClient(controllerConfig.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
+		&cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				return controllerConfig.Client.CoreV1().ConfigMaps(watchNs).List(options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				return controllerConfig.Client.CoreV1().ConfigMaps(watchNs).Watch(options)
+			},
+		},
 		&corev1.ConfigMap{}, controllerConfig.ResyncPeriod, mapEventHandler)
 
 	return ingressWatcher
