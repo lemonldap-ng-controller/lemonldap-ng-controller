@@ -128,8 +128,8 @@ func TestNonExistentConfigDir(t *testing.T) {
 
 	config.dirty = true
 	errSave := config.Save()
-	if errSave == nil || errSave.Error() != "open /nonexistent: No such file or directory" {
-		t.Errorf("Expected 'open /nonexistent: No such file or directory', got %q", errSave)
+	if errSave == nil || errSave.Error() != "Unable to read LemonLDAP::NG configuration file /nonexistent/lmConf-1.js: open /nonexistent/lmConf-1.js: No such file or directory" {
+		t.Errorf("Expected 'Unable to read LemonLDAP::NG configuration file /nonexistent/lmConf-1.js: open /nonexistent/lmConf-1.js: No such file or directory', got '%q'", errSave)
 	}
 }
 
@@ -144,8 +144,8 @@ func TestEmptyConfigDir(t *testing.T) {
 	}
 	config.dirty = true
 	errSave := config.Save()
-	if errSave == nil || errSave.Error() != "No LemonLDAP::NG configuration file found in /empty" {
-		t.Errorf("Expected 'No LemonLDAP::NG configuration file found in /empty', got %q", errSave)
+	if errSave == nil || errSave.Error() != "Unable to read LemonLDAP::NG configuration file /empty/lmConf-1.js: open /empty/lmConf-1.js: No such file or directory" {
+		t.Errorf("Expected 'Unable to read LemonLDAP::NG configuration file /empty/lmConf-1.js: open /empty/lmConf-1.js: No such file or directory', got '%q'", errSave)
 	}
 }
 
