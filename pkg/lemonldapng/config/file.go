@@ -57,11 +57,15 @@ func (c *Config) First() (string, int, error) {
 
 // Last returns the current configuration file name and number
 func (c *Config) Last() (string, int, error) {
+	c.RLock()
+	defer c.RUnlock()
 	return fmt.Sprintf("lmConf-%d.js", c.cfgNum), c.cfgNum, nil
 }
 
 // Next returns the following configuration file name and number
 func (c *Config) Next() (string, int, error) {
+	c.RLock()
+	defer c.RUnlock()
 	return fmt.Sprintf("lmConf-%d.js", c.cfgNum+1), c.cfgNum + 1, nil
 }
 
@@ -101,10 +105,8 @@ func (c *Config) Save() error {
 	if !c.dirty {
 		return nil
 	}
-	nextConfigName, nextConfigNum, err := c.Next()
-	if err != nil {
-		return err
-	}
+	nextConfigNum := c.cfgNum + 1
+	nextConfigName := fmt.Sprintf("lmConf-%d.js", c.cfgNum+1)
 	path := c.configDir + "/" + nextConfigName
 	conf, err := c.loadNoLock("lmConf-1.js")
 	if err != nil {
