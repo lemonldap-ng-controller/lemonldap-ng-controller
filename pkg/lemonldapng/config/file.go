@@ -137,7 +137,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return fmt.Errorf("Unable to write LemonLDAP::NG configuration file %s: %s", path, err)
 	}
-	c.cfgNum += 1
+	c.cfgNum++
 	c.dirty = false
 	return nil
 }

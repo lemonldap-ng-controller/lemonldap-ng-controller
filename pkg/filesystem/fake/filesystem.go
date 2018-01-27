@@ -23,20 +23,23 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
 )
 
-// FakeFileSystem implements FileSystem interface
-type FakeFileSystem struct {
-	root *FakeFile
+// FileSystem implements FileSystem interface
+type FileSystem struct {
+	sync.RWMutex // protects all File's entries
+
+	root *File
 }
 
-// NewFakeFileSystem creates a new FakeFileSystem
-func NewFakeFileSystem() *FakeFileSystem {
-	fs := FakeFileSystem{}
-	fs.root = NewFakeFile(fs, nil, "/", 0755, time.Now(), true)
+// NewFileSystem creates a new FileSystem
+func NewFileSystem() *FileSystem {
+	fs := &FileSystem{}
+	fs.root = NewFile(fs, nil, "/", 0755, time.Now(), true)
 	fs.Mkdir("/var", 0755)
 	fs.Mkdir("/var/lib", 0755)
 	fs.Mkdir("/var/lib/lemonldap-ng", 0755)
@@ -47,11 +50,13 @@ func NewFakeFileSystem() *FakeFileSystem {
 		"locationRules": {}
 	}`)
 	fs.WriteFile("/var/lib/lemonldap-ng/conf/lmConf-1.js", content, 0644)
-	return &fs
+	return fs
 }
 
 // Mkdir creates a new directory with the specified name and permission bits
-func (fs FakeFileSystem) Mkdir(name string, perm os.FileMode) error {
+func (fs *FileSystem) Mkdir(name string, perm os.FileMode) error {
+	fs.Lock()
+	defer fs.Unlock()
 	_, err := fs.root.lookupFile(name, name)
 	if err == nil {
 		return &os.PathError{
@@ -69,53 +74,68 @@ func (fs FakeFileSystem) Mkdir(name string, perm os.FileMode) error {
 			Err:  errParent.(*os.PathError).Err,
 		}
 	}
-	NewFakeFile(fs, fParent, path.Base(name), perm, time.Now(), true)
+	NewFile(fs, fParent, path.Base(name), perm, time.Now(), true)
 	return nil
 }
 
 // Open opens the named file for reading
-func (fs FakeFileSystem) Open(name string) (filesystem.File, error) {
+func (fs *FileSystem) Open(name string) (filesystem.File, error) {
+	fs.RLock()
+	defer fs.RUnlock()
 	return fs.root.lookupFile(name, name)
 }
 
 // ReadFile reads a file and returns the contents
-func (fs FakeFileSystem) ReadFile(filename string) ([]byte, error) {
+func (fs *FileSystem) ReadFile(filename string) ([]byte, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return []byte(""), err
 	}
-	return f.(*FakeFile).content, nil
+	ff := f.(*File)
+	ff.RLock()
+	defer ff.RUnlock()
+	c := make([]byte, len(ff.content))
+	copy(c, ff.content)
+	return c, nil
 }
 
 // WriteFile reads a file and returns the contents
-func (fs FakeFileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
+func (fs *FileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	f, err := fs.Open(filename)
 	if err != nil {
+		fs.Lock()
+		defer fs.Unlock()
 		fParent, errParent := fs.root.lookupFile(filename, path.Dir(filename))
 		if errParent != nil {
 			return errParent
 		}
-		f = NewFakeFile(fs, fParent, path.Base(filename), perm, time.Now(), false)
+		f = NewFile(fs, fParent, path.Base(filename), perm, time.Now(), false)
 	}
-	f.(*FakeFile).content = data
+	ff := f.(*File)
+	ff.Lock()
+	defer ff.Unlock()
+	ff.content = make([]byte, len(data))
+	copy(ff.content, data)
 	return nil
 }
 
-// FakeFile implements File interface
-type FakeFile struct {
-	fs      FakeFileSystem
-	parent  *FakeFile
+// File implements File interface
+type File struct {
+	sync.RWMutex // protects this File's content and metadata
+
+	fs      *FileSystem
+	parent  *File
 	name    string
 	mode    os.FileMode
 	modTime time.Time
 	isDir   bool
 	content []byte
-	entries map[string]*FakeFile
+	entries map[string]*File
 }
 
-// NewFakeFile creates a new FakeFile
-func NewFakeFile(fs FakeFileSystem, parent *FakeFile, name string, mode os.FileMode, modTime time.Time, isDir bool) *FakeFile {
-	f := &FakeFile{
+// NewFile creates a new File
+func NewFile(fs *FileSystem, parent *File, name string, mode os.FileMode, modTime time.Time, isDir bool) *File {
+	ff := &File{
 		fs:      fs,
 		parent:  parent,
 		name:    name,
@@ -123,53 +143,65 @@ func NewFakeFile(fs FakeFileSystem, parent *FakeFile, name string, mode os.FileM
 		modTime: modTime,
 		isDir:   isDir,
 		content: []byte(""),
-		entries: make(map[string]*FakeFile),
+		entries: make(map[string]*File),
 	}
 	if parent != nil {
-		parent.entries[name] = f
+		parent.entries[name] = ff
 	}
-	return f
+	return ff
 }
 
 // Name returns the base name of the file
-func (f FakeFile) Name() string {
-	return f.name
+func (ff *File) Name() string {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.name
 }
 
 // Size returns the length in bytes
-func (f FakeFile) Size() int64 {
-	return int64(len(f.content))
+func (ff *File) Size() int64 {
+	ff.RLock()
+	defer ff.RUnlock()
+	return int64(len(ff.content))
 }
 
 // Mode returns the file mode bits
-func (f FakeFile) Mode() os.FileMode {
-	return f.mode
+func (ff *File) Mode() os.FileMode {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.mode
 }
 
 // ModTime returns the  modification time
-func (f FakeFile) ModTime() time.Time {
-	return f.modTime
+func (ff *File) ModTime() time.Time {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.modTime
 }
 
 // IsDir returns true if directory
-func (f FakeFile) IsDir() bool {
-	return f.isDir
+func (ff File) IsDir() bool {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.isDir
 }
 
-// Sys returns the underlying FakeFile
-func (f FakeFile) Sys() interface{} {
-	return f.fs
+// Sys returns the underlying File
+func (ff *File) Sys() interface{} {
+	ff.RLock()
+	defer ff.RUnlock()
+	return ff.fs
 }
 
-func (f FakeFile) lookupFile(fullpath, relativepath string) (*FakeFile, error) {
+func (ff *File) lookupFile(fullpath, relativepath string) (*File, error) {
 	parts := strings.SplitN(relativepath, "/", 2)
-	if f.parent == nil && parts[0] == "" { // root
+	if ff.parent == nil && parts[0] == "" { // root
 		parts = strings.SplitN(parts[1], "/", 2)
 	}
 	if len(parts) == 1 && parts[0] == "" {
-		return &f, nil
+		return ff, nil
 	}
-	if nextEntry, ok := f.entries[parts[0]]; ok {
+	if nextEntry, ok := ff.entries[parts[0]]; ok {
 		if len(parts) == 1 {
 			return nextEntry, nil
 		}
@@ -183,24 +215,26 @@ func (f FakeFile) lookupFile(fullpath, relativepath string) (*FakeFile, error) {
 }
 
 // Close closes the File
-func (f FakeFile) Close() error {
+func (ff *File) Close() error {
 	return nil
 }
 
 // Readdir reads the contents of the directory associated with file and returns a slice of up to n FileInfo values, as would be returned by Lstat, in directory order
-func (f FakeFile) Readdir(n int) ([]os.FileInfo, error) {
+func (ff *File) Readdir(n int) ([]os.FileInfo, error) {
 	if n > 0 {
 		return nil, &os.PathError{
 			Op:   "readdir",
-			Path: f.Name(),
+			Path: ff.Name(),
 			Err:  errors.New("Sliced call to Readdir not supported"),
 		}
 	}
-	ret := make([]os.FileInfo, len(f.entries))
+	ff.fs.RLock()
+	defer ff.fs.RUnlock()
+	ret := make([]os.FileInfo, len(ff.entries))
 	i := 0
-	for _, entry := range f.entries {
+	for _, entry := range ff.entries {
 		ret[i] = entry
-		i += 1
+		i++
 	}
 	return ret, nil
 }
