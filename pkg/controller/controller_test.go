@@ -116,7 +116,7 @@ func buildControllerConfig(namespace string, forceNamespaceIsolation bool) *Conf
 		ConfigMapName:           "test-ns/test-cm",
 		Namespace:               namespace,
 		ForceNamespaceIsolation: forceNamespaceIsolation,
-		FS: fakefs.NewFakeFileSystem(),
+		FS: fakefs.NewFileSystem(),
 		LemonLDAPConfigurationDirectory: "/var/lib/lemonldap-ng/conf",
 	}
 }
