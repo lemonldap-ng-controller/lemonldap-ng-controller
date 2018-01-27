@@ -213,18 +213,18 @@ func TestNewIngressController(t *testing.T) {
 
 			// A ConfigMap was added: test-ns/test-cm
 			if namespace == "test-ns" || namespace == corev1.NamespaceAll || !forceNamespaceIsolation {
-				configNum += 1
+				configNum++
 				domainRE = domainExampleOrgRE
 			}
 			// An ingress was created: test-ns/test-ingress2
 			if namespace == corev1.NamespaceAll || namespace == "test-ns" {
-				configNum += 1
+				configNum++
 				exportedHeadersRE = exportedHeadersTest2RE
 				locationRulesRE = locationRulesTest2RE
 			}
 			// An ingress was created: default/test-ingress1
 			if namespace == corev1.NamespaceAll {
-				configNum += 1
+				configNum++
 				exportedHeadersRE = exportedHeadersBothRE
 				locationRulesRE = locationRulesBothRE
 			}
@@ -239,18 +239,18 @@ func TestNewIngressController(t *testing.T) {
 
 			// A ConfigMap was deleted: test-ns/test-cm
 			if namespace == "test-ns" || namespace == corev1.NamespaceAll || !forceNamespaceIsolation {
-				configNum += 1
+				configNum++
 				domainRE = domainNoneRE
 			}
 			// An ingress was updated: test-ns/test-ingress2
 			if namespace == corev1.NamespaceAll || namespace == "test-ns" {
-				configNum += 1
+				configNum++
 				exportedHeadersRE = exportedHeadersTest2RE
 				locationRulesRE = locationRulesTest2UpdatedRE
 			}
 			// An ingress was deleted: default/test-ingress1
 			if namespace == corev1.NamespaceAll {
-				configNum += 1
+				configNum++
 			}
 
 			cfgNumRE = regexp.MustCompile(fmt.Sprintf("\"cfgNum\": %d,", configNum))

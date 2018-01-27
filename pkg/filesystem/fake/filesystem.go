@@ -234,7 +234,7 @@ func (ff *File) Readdir(n int) ([]os.FileInfo, error) {
 	i := 0
 	for _, entry := range ff.entries {
 		ret[i] = entry
-		i += 1
+		i++
 	}
 	return ret, nil
 }
