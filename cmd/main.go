@@ -18,10 +18,11 @@ limitations under the License.
 package main
 
 import (
-	"flag"
+	goflag "flag"
 	"time"
 
 	"github.com/golang/glog"
+	flag "github.com/spf13/pflag"
 
 	corev1 "k8s.io/api/core/v1"
 	kubeinformers "k8s.io/client-go/informers"
@@ -42,6 +43,7 @@ var (
 )
 
 func main() {
+	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	flag.Parse()
 
 	// set up signals so we handle the first shutdown signal gracefully
@@ -69,12 +71,12 @@ func main() {
 }
 
 func init() {
-	flag.StringVar(&config.APIServerHost, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	flag.StringVar(&config.KubeConfigFile, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
+	flag.StringVar(&config.APIServerHost, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster")
+	flag.StringVar(&config.KubeConfigFile, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster")
 
 	flag.StringVar(&config.ConfigMapName, "configmap", "", "Name of the ConfigMap that contains the custom configuration to use")
-	flag.DurationVar(&config.ResyncPeriod, "sync-period", 600*time.Second, "Relist and confirm cloud resources this often. Default is 10 minutes")
-	flag.StringVar(&config.Namespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces.")
-	flag.BoolVar(&config.ForceNamespaceIsolation, "force-namespace-isolation", false, "Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace.")
-	flag.StringVar(&config.LemonLDAPConfigurationDirectory, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory.")
+	flag.DurationVar(&config.ResyncPeriod, "sync-period", 600*time.Second, "Relist and confirm cloud resources this often")
+	flag.StringVar(&config.Namespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces")
+	flag.BoolVar(&config.ForceNamespaceIsolation, "force-namespace-isolation", false, "Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace")
+	flag.StringVar(&config.LemonLDAPConfigurationDirectory, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory")
 }
