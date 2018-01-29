@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"testing"
 
-	fakefs "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem/fake"
+	fakefs "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/fake"
 )
 
 func TestAddDeleteVhosts(t *testing.T) {

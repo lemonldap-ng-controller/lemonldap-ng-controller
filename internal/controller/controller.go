@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
+	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/lemonldapng/config"
 )
 
 // LemonLDAPNGController watches the kubernetes api for changes to ingresses

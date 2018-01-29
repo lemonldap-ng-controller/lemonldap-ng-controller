@@ -22,7 +22,7 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
 var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)

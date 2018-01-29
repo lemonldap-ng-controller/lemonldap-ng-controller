@@ -21,7 +21,7 @@ import (
 
 	clientset "k8s.io/client-go/kubernetes"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
 // Configuration stores lemonldap-ng-controller configuration

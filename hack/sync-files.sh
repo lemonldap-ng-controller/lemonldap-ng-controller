@@ -32,7 +32,7 @@ for entry in \
   'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-golint.sh hack' \
   'k8s.io/sample-controller/LICENSE .' \
-  'k8s.io/sample-controller/pkg/signals/*.go pkg/signals'
+  'k8s.io/sample-controller/pkg/signals/*.go internal/signals'
 do
   src="$GOPATH/src/$(echo $entry | awk '{print $1}')"
   dst_dir="$(echo $entry | awk '{print $2}')"

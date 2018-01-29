@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
 // FileSystem implements FileSystem interface

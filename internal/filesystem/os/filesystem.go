@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
 // FileSystem implements FileSystem interface

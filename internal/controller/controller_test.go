@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	fakeclient "k8s.io/client-go/kubernetes/fake"
 
-	fakefs "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem/fake"
+	fakefs "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/fake"
 )
 
 func buildFakeClientSet() *fakeclient.Clientset {
