@@ -31,9 +31,9 @@ import (
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/controller"
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/filesystem/os"
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/signals"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/controller"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/os"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/signals"
 )
 
 var (
@@ -61,7 +61,7 @@ func main() {
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(config.Client, time.Second*30)
 
-	ingressController := controller.NewIngressController(config)
+	ingressController := controller.NewLemonLDAPNGController(config)
 
 	go kubeInformerFactory.Start(stopCh)
 
