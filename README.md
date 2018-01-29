@@ -79,7 +79,7 @@ data:
 
 You'll need to add the following to args:
 ```yaml
-- -configmap=ingress-nginx/lemonldap-ng-configuration
+- --configmap=ingress-nginx/lemonldap-ng-configuration
 ```
 
 See also [LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/parameterlist).
