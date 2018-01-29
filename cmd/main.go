@@ -45,6 +45,14 @@ var (
 func main() {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	flag.Parse()
+	if len(flag.Args()) > 0 {
+		if flag.Arg(0) != "--" {
+			glog.Fatalf("First non-flag parameter should be --, got %s", flag.Arg(0))
+		}
+		config.Command = flag.Args()[1:]
+	} else {
+		config.Command = []string{"/usr/sbin/llng-fastcgi-server", "--foreground", "--listen", "127.0.0.1:9000"}
+	}
 
 	// Workaround for "ERROR: logging before flag.Parse". See:
 	// https://github.com/golang/glog/pull/13

@@ -38,6 +38,9 @@ type LemonLDAPNGController struct {
 	ingressCacheController   cache.Controller
 	configMapCacheStore      cache.Store
 	configMapCacheController cache.Controller
+
+	// llngErrCh channel used to detect errors with the LemonLDAP::NG processes
+	llngErrCh chan error
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -53,6 +56,7 @@ func (c *LemonLDAPNGController) Run(stopCh <-chan struct{}) error {
 	glog.Info("Starting workers")
 	go c.ingressCacheController.Run(stopCh)
 	go c.configMapCacheController.Run(stopCh)
+	go c.StartProcess(stopCh)
 
 	glog.Info("Started workers")
 	<-stopCh
