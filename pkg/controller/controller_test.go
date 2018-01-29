@@ -121,7 +121,7 @@ func buildControllerConfig(namespace string, forceNamespaceIsolation bool) *Conf
 	}
 }
 
-func checkLLConfig(t *testing.T, c *IngressController, cfgNum int, checks []*regexp.Regexp) {
+func checkLLConfig(t *testing.T, c *LemonLDAPNGController, cfgNum int, checks []*regexp.Regexp) {
 	configName := fmt.Sprintf("lmConf-%d.js", cfgNum)
 	configPath := "/var/lib/lemonldap-ng/conf/" + configName
 	lmConf, errRead := c.controllerConfig.FS.ReadFile(configPath)
@@ -138,7 +138,7 @@ func checkLLConfig(t *testing.T, c *IngressController, cfgNum int, checks []*reg
 	}
 }
 
-func TestNewIngressController(t *testing.T) {
+func TestNewLemonLDAPNGController(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
 
 	for _, namespace := range []string{corev1.NamespaceAll, "test-ns", "another-ns"} {
@@ -147,7 +147,7 @@ func TestNewIngressController(t *testing.T) {
 			t.Logf("With namespace=%s, forceNamespaceIsolation=%v", namespace, forceNamespaceIsolation)
 			stopCh := make(chan struct{})
 			controllerConfig := buildControllerConfig(namespace, forceNamespaceIsolation)
-			ingressController := NewIngressController(controllerConfig)
+			ingressController := NewLemonLDAPNGController(controllerConfig)
 
 			// FIXME We need a better way than sleeping
 			time.AfterFunc(3*time.Second, func() {

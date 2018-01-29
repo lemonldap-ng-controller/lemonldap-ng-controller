@@ -61,7 +61,7 @@ func main() {
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(config.Client, time.Second*30)
 
-	ingressController := controller.NewIngressController(config)
+	ingressController := controller.NewLemonLDAPNGController(config)
 
 	go kubeInformerFactory.Start(stopCh)
 

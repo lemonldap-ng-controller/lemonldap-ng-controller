@@ -33,8 +33,8 @@ import (
 	llngconfig "github.com/lemonldap-ng-controller/lemonldap-ng-controller/pkg/lemonldapng/config"
 )
 
-// IngressController watches the kubernetes api for changes to ingresses
-type IngressController struct {
+// LemonLDAPNGController watches the kubernetes api for changes to ingresses
+type LemonLDAPNGController struct {
 	controllerConfig         *Configuration
 	llngConfig               *llngconfig.Config
 	ingressCacheStore        cache.Store
@@ -47,7 +47,7 @@ type IngressController struct {
 // as syncing informer caches and starting workers. It will block until stopCh
 // is closed, at which point it will shutdown the workqueue and wait for
 // workers to finish processing their current work items.
-func (c *IngressController) Run(stopCh <-chan struct{}) error {
+func (c *LemonLDAPNGController) Run(stopCh <-chan struct{}) error {
 	defer utilruntime.HandleCrash()
 
 	// Start the informer factories to begin populating the informer caches
@@ -64,9 +64,9 @@ func (c *IngressController) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
-// NewIngressController returns a new ingress controller
-func NewIngressController(controllerConfig *Configuration) *IngressController {
-	ingressWatcher := &IngressController{}
+// NewLemonLDAPNGController returns a new ingress controller
+func NewLemonLDAPNGController(controllerConfig *Configuration) *LemonLDAPNGController {
+	ingressWatcher := &LemonLDAPNGController{}
 	ingressWatcher.controllerConfig = controllerConfig
 	ingressWatcher.llngConfig = llngconfig.NewConfig(controllerConfig.FS, controllerConfig.LemonLDAPConfigurationDirectory)
 
@@ -113,7 +113,7 @@ func NewIngressController(controllerConfig *Configuration) *IngressController {
 }
 
 // parseIngress returns the ingress namespace, the ingress name, and a map of VHosts
-func (c *IngressController) parseIngress(obj interface{}) (string, string, map[string]*llngconfig.VHost, error) {
+func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, map[string]*llngconfig.VHost, error) {
 	ingressObj := obj.(*extensionsv1beta1.Ingress)
 	ingressNamespace := ingressObj.Namespace
 	ingressName := ingressObj.Name
@@ -157,7 +157,7 @@ func (c *IngressController) parseIngress(obj interface{}) (string, string, map[s
 	return ingressNamespace, ingressName, vhosts, nil
 }
 
-func (c *IngressController) ingressAdded(obj interface{}) {
+func (c *LemonLDAPNGController) ingressAdded(obj interface{}) {
 	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
 	if err != nil {
 		glog.Error(err)
@@ -172,7 +172,7 @@ func (c *IngressController) ingressAdded(obj interface{}) {
 	}
 }
 
-func (c *IngressController) ingressDeleted(obj interface{}) {
+func (c *LemonLDAPNGController) ingressDeleted(obj interface{}) {
 	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
 	if err != nil {
 		glog.Error(err)
@@ -187,7 +187,7 @@ func (c *IngressController) ingressDeleted(obj interface{}) {
 	}
 }
 
-func (c *IngressController) ingressUpdated(old, cur interface{}) {
+func (c *LemonLDAPNGController) ingressUpdated(old, cur interface{}) {
 	_, _, oldVhosts, err := c.parseIngress(cur)
 	if err != nil {
 		glog.Error(err)
@@ -208,7 +208,7 @@ func (c *IngressController) ingressUpdated(old, cur interface{}) {
 	}
 }
 
-func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
+func (c *LemonLDAPNGController) configMapSmurfed(obj interface{}, verb string) {
 	configMapObj := obj.(*corev1.ConfigMap)
 	configMapKey := fmt.Sprintf("%s/%s", configMapObj.Namespace, configMapObj.Name)
 	if configMapKey == c.controllerConfig.ConfigMapName {
@@ -242,14 +242,14 @@ func (c *IngressController) configMapSmurfed(obj interface{}, verb string) {
 	}
 }
 
-func (c *IngressController) configMapAdded(obj interface{}) {
+func (c *LemonLDAPNGController) configMapAdded(obj interface{}) {
 	c.configMapSmurfed(obj, "added")
 }
 
-func (c *IngressController) configMapDeleted(obj interface{}) {
+func (c *LemonLDAPNGController) configMapDeleted(obj interface{}) {
 	c.configMapSmurfed(obj, "deleted")
 }
 
-func (c *IngressController) configMapUpdated(old, cur interface{}) {
+func (c *LemonLDAPNGController) configMapUpdated(old, cur interface{}) {
 	c.configMapSmurfed(cur, "updated")
 }
