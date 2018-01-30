@@ -46,6 +46,10 @@ func main() {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	flag.Parse()
 
+	// Workaround for "ERROR: logging before flag.Parse". See:
+	// https://github.com/golang/glog/pull/13
+	goflag.CommandLine.Parse([]string{})
+
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
