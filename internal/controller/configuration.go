@@ -40,4 +40,6 @@ type Configuration struct {
 
 	FS                              filesystem.FileSystem
 	LemonLDAPConfigurationDirectory string
+
+	Command []string
 }

@@ -30,4 +30,4 @@ EXPOSE 9000
 
 ENTRYPOINT ["dumb-init","--","/docker-entrypoint.sh"]
 
-CMD "/usr/sbin/llng-fastcgi-server" "--foreground" "--listen" "127.0.0.1:9000"
+CMD "/lemonldap-ng-controller" "--alsologtostderr"
