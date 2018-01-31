@@ -21,6 +21,12 @@ RUN set -x && \
     apt-get install -y \
       dumb-init \
       lemonldap-ng-fastcgi-server \
+      libapache-session-browseable-perl \
+      libdbd-pg-perl \
+      liblasso-perl \
+      libxml-libxml-perl \
+      libxml-libxslt-perl \
+      libxml-simple-perl \
       && \
     \
     echo "# Cleaning up..." && \
