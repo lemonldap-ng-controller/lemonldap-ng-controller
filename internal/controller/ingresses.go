@@ -103,7 +103,7 @@ func (c *LemonLDAPNGController) ingressDeleted(obj interface{}) {
 }
 
 func (c *LemonLDAPNGController) ingressUpdated(old, cur interface{}) {
-	_, _, oldVhosts, err := c.parseIngress(cur)
+	_, _, oldVhosts, err := c.parseIngress(old)
 	if err != nil {
 		glog.Error(err)
 		return
