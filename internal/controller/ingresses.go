@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
@@ -103,7 +104,7 @@ func (c *LemonLDAPNGController) ingressDeleted(obj interface{}) {
 }
 
 func (c *LemonLDAPNGController) ingressUpdated(old, cur interface{}) {
-	_, _, oldVhosts, err := c.parseIngress(cur)
+	_, _, oldVhosts, err := c.parseIngress(old)
 	if err != nil {
 		glog.Error(err)
 		return
@@ -111,6 +112,9 @@ func (c *LemonLDAPNGController) ingressUpdated(old, cur interface{}) {
 	curIngressNamespace, curIngressName, curVhosts, err := c.parseIngress(cur)
 	if err != nil {
 		glog.Error(err)
+		return
+	}
+	if reflect.DeepEqual(oldVhosts, curVhosts) {
 		return
 	}
 	glog.Infof("An ingress was updated: %s/%s", curIngressNamespace, curIngressName)
