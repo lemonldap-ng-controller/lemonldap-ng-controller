@@ -38,7 +38,7 @@ type Configuration struct {
 
 	ForceNamespaceIsolation bool
 
-	FS                              filesystem.FileSystem
+	FS                              filesystem.Filesystem
 	LemonLDAPConfigurationDirectory string
 
 	Command []string

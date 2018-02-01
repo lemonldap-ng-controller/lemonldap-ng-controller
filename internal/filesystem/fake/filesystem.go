@@ -29,16 +29,16 @@ import (
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
-// FileSystem implements FileSystem interface
-type FileSystem struct {
+// Filesystem implements Filesystem interface
+type Filesystem struct {
 	sync.RWMutex // protects all File's entries
 
 	root *File
 }
 
-// NewFileSystem creates a new FileSystem
-func NewFileSystem() *FileSystem {
-	fs := &FileSystem{}
+// NewFilesystem creates a new Filesystem
+func NewFilesystem() *Filesystem {
+	fs := &Filesystem{}
 	fs.root = NewFile(fs, nil, "/", 0755, time.Now(), true)
 	fs.Mkdir("/var", 0755)
 	fs.Mkdir("/var/lib", 0755)
@@ -54,7 +54,7 @@ func NewFileSystem() *FileSystem {
 }
 
 // Mkdir creates a new directory with the specified name and permission bits
-func (fs *FileSystem) Mkdir(name string, perm os.FileMode) error {
+func (fs *Filesystem) Mkdir(name string, perm os.FileMode) error {
 	fs.Lock()
 	defer fs.Unlock()
 	_, err := fs.root.lookupFile(name, name)
@@ -79,14 +79,14 @@ func (fs *FileSystem) Mkdir(name string, perm os.FileMode) error {
 }
 
 // Open opens the named file for reading
-func (fs *FileSystem) Open(name string) (filesystem.File, error) {
+func (fs *Filesystem) Open(name string) (filesystem.File, error) {
 	fs.RLock()
 	defer fs.RUnlock()
 	return fs.root.lookupFile(name, name)
 }
 
 // Stat returns a FileInfo describing the named file
-func (fs *FileSystem) Stat(name string) (os.FileInfo, error) {
+func (fs *Filesystem) Stat(name string) (os.FileInfo, error) {
 	f, err := fs.Open(name)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (fs *FileSystem) Stat(name string) (os.FileInfo, error) {
 }
 
 // ReadFile reads a file and returns the contents
-func (fs *FileSystem) ReadFile(filename string) ([]byte, error) {
+func (fs *Filesystem) ReadFile(filename string) ([]byte, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return []byte(""), err
@@ -110,7 +110,7 @@ func (fs *FileSystem) ReadFile(filename string) ([]byte, error) {
 }
 
 // WriteFile reads a file and returns the contents
-func (fs *FileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
+func (fs *Filesystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	f, err := fs.Open(filename)
 	if err != nil {
 		fs.Lock()
@@ -133,7 +133,7 @@ func (fs *FileSystem) WriteFile(filename string, data []byte, perm os.FileMode) 
 type File struct {
 	sync.RWMutex // protects this File's content and metadata
 
-	fs      *FileSystem
+	fs      *Filesystem
 	parent  *File
 	name    string
 	mode    os.FileMode
@@ -144,7 +144,7 @@ type File struct {
 }
 
 // NewFile creates a new File
-func NewFile(fs *FileSystem, parent *File, name string, mode os.FileMode, modTime time.Time, isDir bool) *File {
+func NewFile(fs *Filesystem, parent *File, name string, mode os.FileMode, modTime time.Time, isDir bool) *File {
 	ff := &File{
 		fs:      fs,
 		parent:  parent,

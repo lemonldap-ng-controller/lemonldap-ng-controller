@@ -22,8 +22,8 @@ import (
 	"os"
 )
 
-// FileSystem interface
-type FileSystem interface {
+// Filesystem interface
+type Filesystem interface {
 	// from "os"
 	Mkdir(name string, perm os.FileMode) error
 	Open(name string) (File, error)
