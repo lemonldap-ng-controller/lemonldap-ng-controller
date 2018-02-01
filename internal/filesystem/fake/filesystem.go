@@ -85,6 +85,16 @@ func (fs *FileSystem) Open(name string) (filesystem.File, error) {
 	return fs.root.lookupFile(name, name)
 }
 
+// Stat returns a FileInfo describing the named file
+func (fs *FileSystem) Stat(name string) (os.FileInfo, error) {
+	f, err := fs.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	ff := f.(*File)
+	return ff, nil
+}
+
 // ReadFile reads a file and returns the contents
 func (fs *FileSystem) ReadFile(filename string) ([]byte, error) {
 	f, err := fs.Open(filename)

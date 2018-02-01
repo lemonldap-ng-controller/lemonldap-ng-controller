@@ -38,6 +38,11 @@ func (FileSystem) Open(name string) (filesystem.File, error) {
 	return os.Open(name)
 }
 
+// Stat returns a FileInfo describing the named file
+func (FileSystem) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
+
 // ReadFile reads a file and returns the contents
 func (FileSystem) ReadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)

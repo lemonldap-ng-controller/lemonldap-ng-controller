@@ -27,6 +27,7 @@ type FileSystem interface {
 	// from "os"
 	Mkdir(name string, perm os.FileMode) error
 	Open(name string) (File, error)
+	Stat(name string) (os.FileInfo, error)
 
 	// from "io/ioutil"
 	ReadFile(filename string) ([]byte, error)
