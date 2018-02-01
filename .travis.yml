@@ -48,6 +48,8 @@ jobs:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make cover
   - stage: e2e
+    install:
+    - go get -t -v ./...
     before_script:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make e2e-image
@@ -59,7 +61,7 @@ jobs:
 
 stage: Build
 install:
-- go get -t -v ./...
+- go get -t -v $(go list ./... | grep -v vendor | grep -v '/test/e2e')
 script:
 - make sub-container-$ARCH
 - if [ "$TRAVIS_REPO_SLUG" == "lemonldap-ng-controller/lemonldap-ng-controller" -a "$TRAVIS_BRANCH" == "master" -a "$TRAVIS_PULL_REQUEST" == false ]; then
