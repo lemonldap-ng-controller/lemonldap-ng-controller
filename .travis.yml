@@ -50,6 +50,8 @@ jobs:
   - stage: e2e
     install:
     - go get -t -v ./...
+    - ls -ld "$GOPATH"/src/k8s.io/*/vendor/github.com/golang/glog
+    - rm -r "$GOPATH"/src/k8s.io/*/vendor/github.com/golang/glog
     before_script:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make e2e-image
