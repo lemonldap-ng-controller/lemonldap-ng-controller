@@ -38,6 +38,8 @@ for entry in \
   'k8s.io/ingress-nginx/hack/verify-all.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-golint.sh hack' \
+  'k8s.io/ingress-nginx/test/e2e/*.go test/e2e' \
+  'k8s.io/ingress-nginx/test/e2e/framework/*.go test/e2e/framework' \
   'k8s.io/ingress-nginx/test/e2e/up.sh test/e2e' \
   'k8s.io/ingress-nginx/test/e2e/wait-for-nginx.sh test/e2e' \
   'k8s.io/sample-controller/LICENSE .' \
@@ -51,5 +53,18 @@ done
 
 # Keep original image
 sed -i 's@^kubectl set image@true no set image@' test/e2e/wait-for-nginx.sh
+
+# Change ingress-nginx e2e import path
+sed -i \
+  -e /defaultbackend/d \
+  -e /ssl/d \
+  test/e2e/e2e.go
+sed -i \
+  's@k8s.io/ingress-nginx/test/e2e@github.com/lemonldap-ng-controller/lemonldap-ng-controller/test/e2e@' \
+  test/e2e/*.go \
+  test/e2e/framework/*.go
+sed -i \
+  's@\t"k8s.io/ingress-nginx/internal/file"@\n\tfile "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/os"@' \
+  test/e2e/framework/util.go
 
 # ex: ts=2 sw=2 et filetype=sh
