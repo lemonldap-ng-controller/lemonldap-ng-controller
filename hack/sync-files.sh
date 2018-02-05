@@ -38,6 +38,8 @@ for entry in \
   'k8s.io/ingress-nginx/hack/verify-all.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-golint.sh hack' \
+  'k8s.io/ingress-nginx/test/e2e/up.sh test/e2e' \
+  'k8s.io/ingress-nginx/test/e2e/wait-for-nginx.sh test/e2e' \
   'k8s.io/sample-controller/LICENSE .' \
   'k8s.io/sample-controller/pkg/signals/*.go internal/signals'
 do
