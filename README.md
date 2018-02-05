@@ -8,18 +8,24 @@
 
 This repository contains the LemonLDAP::NG controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the LemonLDAP configuration.
 
-It is intended to be used with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx) with the [nginx.ingress.kubernetes.io/auth-url](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/annotations.md#external-authentication) annotation.
+It is intended to be used with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx).
+
+## Deployement
+
+See [Deployment](deploy/README.md).
 
 ## Ingress Annotations
 
 The following annotations are supported:
 
-| Name                                                                        | type |
-|-----------------------------------------------------------------------------|------|
-|[kubernetes-controller.lemonldap-ng.org/location-rules](#location-rules)     | hash |
-|[kubernetes-controller.lemonldap-ng.org/exported-headers](#exported-headers) | hash |
+| Name                                                                        | type   |
+|-----------------------------------------------------------------------------|--------|
+|[kubernetes-controller.lemonldap-ng.org/location-rules](#location-rules)     | string |
+|[kubernetes-controller.lemonldap-ng.org/exported-headers](#exported-headers) | string |
 
 ### location-rules
+
+YAML or JSON are supported:
 
 ```yaml
 kubernetes-controller.lemonldap-ng.org/location-rules: |
@@ -44,6 +50,8 @@ See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentatio
 
 ### exported-headers
 
+YAML or JSON are supported:
+
 ```yaml
 kubernetes-controller.lemonldap-ng.org/exported-headers: |
   {
@@ -66,9 +74,11 @@ See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentatio
 
 A config map can be used to override lmConf-1.js parameters.
 
+YAML or JSON are supported:
+
 ```yaml
-apiVersion: v1
 kind: ConfigMap
+apiVersion: v1
 metadata:
   name: lemonldap-ng-configuration
   namespace: ingress-nginx
@@ -77,12 +87,18 @@ data:
     domain: example.org
 ```
 
-You'll need to add the following to args:
+This is the most difficult part of LemonLDAP::NG configuration.
+Recommended settings include:
+- [Single Sign On cookie, domain and portal URL](https://lemonldap-ng.org/documentation/1.9/ssocookie)
+- [authentification, user and password backends](https://lemonldap-ng.org/documentation/1.9/start#authentication_users_and_password_databases)
+- [session database](https://lemonldap-ng.org/documentation/1.9/start#sessions_database) (if you have more than one replica)
+
+See also the [example ConfigMap](deploy/llng-configmap.yaml) and the [full parameters list from LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/parameterlist).
+
+Note: Make sure to have the following to arg in the deployement:
 ```yaml
 - --configmap=ingress-nginx/lemonldap-ng-configuration
 ```
-
-See also [LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/parameterlist).
 
 ## Command line flags
 
