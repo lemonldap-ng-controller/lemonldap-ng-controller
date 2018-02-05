@@ -15,6 +15,8 @@ go_import_path: github.com/lemonldap-ng-controller/lemonldap-ng-controller
 env:
   global:
   - DOCKER=docker
+  - KUBERNETES_VERSION=v1.8.0
+  - CHANGE_MINIKUBE_NONE_USER=true
   - secure: rCXRNDj7wIxukABersTdswVeNj5DxurIWCux9aUB+y2X9R/yAcnN0eACCI5qVFl/MOwFSeMjr5yNLdTzxddGGQTdG49hn4mXowWfPWlGNONUP32+1vVMAwazM8FYwsm4bYsD6G7+OE4DmnI9oKTAut0PPlgAFccZZrgojUF7VN22/DCYnR0N5/C4VB+nUJZj3u16noJ43MRWh7jYUXKjiMdTGUZxZVBllTDaVz6eCv3Vfd/a5wLoIZEbgMvjeJJ+tmtVoIlnj9/KXqNNn3zxRoltj2ckKBlPCYcrxeQIKntKNOoKlvtnTLWlk4GMzTIR/Crmu4T4wGduyIFKbyAYkA3Yw3q+nk1KqjtmmddjPcsZlWTgJKcMGVb4YThGWdjVCySqt1qjOusDNvAlgWNiITg6FiJkJjqa+MTM9fO3YvRJ+/KmN1UzJaEAyRvNO/WUTd2IwdFtadOpDqacMhBK7bPXvShm0s6m0UYoZV1THIHW5xNxHFDpok6kKZrhVsz+hAkz82CmDmPdydUS1RqNcXHG0+IGNo5mBX3g1uwEr+9oBf+TEd30kd9mOsKUxHgnYlfBqZmSyUfc/G6jhayFxYMF/Sq1/mL/GkjDAmO9oFjGd68WoMwqchmZUPM3xqljlB0Bfwj4/tG7UoD7JLvfbZZ5JWYEOu34osUTcECt3cI=
   - secure: wl02u7bTNL4JXu+Sx1edcmAA2CqGa02Nu3tA/6JKJkBjGPymRw4S7WyQSW7P2kZpb6mj0FYxCUBuIJOAUuropV2fA4SM405+s6Bcc/vjwG7o5G2EVk7e1t497LUmu3OK2MDQREKonG8sg7QtC389Ggn1vYVyRrrGyFPHEW4VCXeDxIKXCSxKXjh2Bt1oHoyM3FR23MtFTPgwcWTfmquEcQHT+TEPoj45JhpX+yBscv9jJ8tZCiH52zFpffRG7LSUUaJGLmEChdx6pgc3XHT1DSMCjYGhcaoi027quY7TbPAfWoxfJIBO1uRlRDJ1XI65vjZSdpKh7QfzZa1xZSWWlDEjCwgWAn+5Bp6W7rtYAbCK4NJBcqZIC7M4WCwoQ6ZLvKdAeVFzsA7zO0FrNGub4BDlEdMdrAZCONuZ3ENw4vI6OCOQ8qz9TOA4H46zsf1j4hs7jUEyKY/40peZGEfnby54fd8OOltE9vHbLLYZPw8oorg7gkQ3Aj11SZsW/AraZOIZmi+dBbhj1qYyDjwI7GsCv1rNhx0oknJpRNN9dWRzNMzUtu7Th0zC0IHKIDk/2HBr0BUHAawPXvpZX9LVcsGJDru1YjP0EWIPk4BlJYieti71+Jpe9SU651eyRZ0ZePlsWCwbxzvitVGIOkeKlxsZOcMHB1Ba4uCAZFOgg/I=
   - secure: swFIyLdR1UKfyRGes6mvg49BJpcb/e8s55VQ3cVpKCz/pZsGOjl9M56IKg9KgH6tp0zwNCQIM4ydo5//TuI6cIQhQuVT7kNd0C+x1Q27kOT8cUdAHj17uu9eCgYbXYFJ5W/AXNuCW0r70dbcPp/JISFCnZa0O2s9N4AyuIdcYwQMTexrn79WeFvj64Uk+gWVtyP8K6UMjNPxWCqKPo24E4MIib9uQof1VfiSnSXyx99K27nBQU3D+pA8N2V54VcHYdEpSGYznwuhtZDHu6crAVVXovRvTyvsYMSP6Kb+Yp5ZL2KmJPYAr7OkwcdoLNbAF1iMtd3dyy/ZLYUmLl/hbaVEAKuCjSUL8QkqCS0t5Pgr2VRyewSAHs6MEvD6NlgjidGm7hfW5TU04nbMR2teN9omj1CpSEVr/Obtfz0r+Hpf0D5Bze9PV6hNpu2xMwE2wtMaTHRj3fD9eSlDXO30Gh9Zex3E1crcLljNZ/Kbvdh1cMfVDhjoINkFOjEhGvvqaagr9OHGnUPfGF9C2c90yYzGZh1pk5ADw4D/WKeCd+JgqQfdp30MkvnplWL7YUEj3Btum4yYmcjVV7g2J2aB71LXHL5O78mhxVmvmCuug0C0vfrwxlA9vCH7LfcKgiJ2XP7WjVnqJfq8bERhT9v0xGAyx6TXPJxlP9kOuEu8rBQ=
@@ -28,6 +30,7 @@ env:
 stages:
 - Static Check
 - Coverage
+- e2e
 - Build
 
 jobs:
@@ -44,6 +47,16 @@ jobs:
     - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;fi
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make cover
+  - stage: e2e
+    before_script:
+    - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
+    - make e2e-image
+    - test/e2e/up.sh
+    - test/e2e/wait-for-nginx.sh
+    - test/e2e/wait-for-lemonldap-ng.sh
+    script:
+    - make e2e-test
+
 stage: Build
 install:
 - go get -t -v ./...
