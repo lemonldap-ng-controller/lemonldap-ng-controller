@@ -1,0 +1,37 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: lemonldap-ng-configuration
+  namespace: ingress-nginx
+  labels:
+    app: ingress-nginx
+data:
+  lmConf.js: |
+    # SSO Cookie
+    domain: example.org
+    cookieName: lemonldap
+    securedCookie: 0 # 0=unsecuredCookie, 1=securedCookie, 2=doubleCookie, 3=doubleCookieForSingleSession
+    # cda: 1 # for Cross domain authentication
+    
+    # Portal URL
+    portal: http://auth.example.org/
+    mailUrl : http://auth.example.org/mail.pl
+    registerUrl : http://auth.example.org/register.pl
+    # https: 1 # recommended, to force HTTPs
+    
+    # Authentification, user and password backends
+    # authentication: LDAP # Default Demo
+    # userDB: LDAP # Default Demo
+    # passwordDB: LDAP # Default Demo
+    # ldapServer: ldap://ldap.example.org
+    # ldapBase: dc=example,dc=org
+    
+    # Session database
+    # globalStorage: Apache::Session::Browseable::Postgres # Default Apache::Session::File
+    # globalStorageOptions:
+    #   DataSource: dbi:Pg:dbname=sessions;host=10.2.3.1
+    #   UserName: lemonldapng
+    #   Password: mysuperpassword
+    #   TableName: sessions
+    #   Commit: 1
+    #   Index: _whatToTrace ipAddr
