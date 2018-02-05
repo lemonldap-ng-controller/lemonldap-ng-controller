@@ -138,6 +138,7 @@ func (c *Config) Save() error {
 		return fmt.Errorf("Unable to write LemonLDAP::NG configuration file %s: %s", path, err)
 	}
 	c.cfgNum++
+	c.ReloadLemonLDAPNG()
 	c.dirty = false
 	return nil
 }
