@@ -143,6 +143,16 @@ test:
 	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
+.PHONY: e2e-image
+e2e-image: sub-container-amd64
+	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	docker images
+
+.PHONY: e2e-test
+e2e-test:
+	@go test -o e2e-tests -c ./test/e2e
+	@KUBECONFIG=${HOME}/.kube/config INGRESSNGINXCONFIG=${HOME}/.kube/config ./e2e-tests
+
 .PHONY: cover
 cover:
 	@echo "+ $@"

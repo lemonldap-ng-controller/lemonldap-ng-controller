@@ -38,7 +38,7 @@ import (
 
 var (
 	config *controller.Configuration = &controller.Configuration{
-		FS: &os.FileSystem{},
+		FS: &os.Filesystem{},
 	}
 )
 

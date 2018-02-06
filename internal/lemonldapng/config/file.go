@@ -31,7 +31,7 @@ var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)
 type Config struct {
 	sync.RWMutex
 
-	fs        filesystem.FileSystem
+	fs        filesystem.Filesystem
 	configDir string
 	cfgNum    int
 	overrides map[string]interface{}
@@ -40,7 +40,7 @@ type Config struct {
 }
 
 // NewConfig creates a new LemonLDAP::NG configuration loader
-func NewConfig(fs filesystem.FileSystem, configDir string) *Config {
+func NewConfig(fs filesystem.Filesystem, configDir string) *Config {
 	return &Config{
 		fs:        fs,
 		configDir: configDir,

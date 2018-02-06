@@ -26,7 +26,7 @@ import (
 
 func TestAddDeleteVhosts(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
-	fs := fakefs.NewFileSystem()
+	fs := fakefs.NewFilesystem()
 	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
 	vhosts := make(map[string]*VHost)
 	vhosts = map[string]*VHost{
@@ -76,7 +76,7 @@ func TestAddDeleteVhosts(t *testing.T) {
 
 func TestOverrides(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
-	fs := fakefs.NewFileSystem()
+	fs := fakefs.NewFilesystem()
 	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
 	overrides := make(map[string]interface{})
 	overrides = map[string]interface{}{
@@ -118,7 +118,7 @@ func TestOverrides(t *testing.T) {
 
 func TestNonExistentConfigDir(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
-	fs := fakefs.NewFileSystem()
+	fs := fakefs.NewFilesystem()
 	config := NewConfig(fs, "/nonexistent")
 
 	errSave1 := config.Save() // dirty == false
@@ -135,7 +135,7 @@ func TestNonExistentConfigDir(t *testing.T) {
 
 func TestEmptyConfigDir(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
-	fs := fakefs.NewFileSystem()
+	fs := fakefs.NewFilesystem()
 	fs.Mkdir("/empty", 0755)
 	config := NewConfig(fs, "/empty")
 	_, errLoad := config.LoadFirst()
@@ -151,7 +151,7 @@ func TestEmptyConfigDir(t *testing.T) {
 
 func TestInvalidLocationRules(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
-	fs := fakefs.NewFileSystem()
+	fs := fakefs.NewFilesystem()
 	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
 
 	errWrite := fs.WriteFile("/var/lib/lemonldap-ng/conf/lmConf-1.js", []byte("{}"), 0755)

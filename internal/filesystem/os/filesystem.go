@@ -25,25 +25,30 @@ import (
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem"
 )
 
-// FileSystem implements FileSystem interface
-type FileSystem struct{}
+// Filesystem implements Filesystem interface
+type Filesystem struct{}
 
 // Mkdir creates a new directory with the specified name and permission bits
-func (FileSystem) Mkdir(name string, perm os.FileMode) error {
+func (Filesystem) Mkdir(name string, perm os.FileMode) error {
 	return os.Mkdir(name, perm)
 }
 
 // Open opens the named file for reading
-func (FileSystem) Open(name string) (filesystem.File, error) {
+func (Filesystem) Open(name string) (filesystem.File, error) {
 	return os.Open(name)
 }
 
+// Stat returns a FileInfo describing the named file
+func (Filesystem) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
+
 // ReadFile reads a file and returns the contents
-func (FileSystem) ReadFile(filename string) ([]byte, error) {
+func (Filesystem) ReadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
 // WriteFile reads a file and returns the contents
-func (FileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
+func (Filesystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	return ioutil.WriteFile(filename, data, perm)
 }

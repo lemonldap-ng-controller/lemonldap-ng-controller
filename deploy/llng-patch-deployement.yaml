@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+  namespace: ingress-nginx
+spec:
+  template:
+    spec:
+      containers:
+        - name: lemonldap-ng-controller
+          image: lemonldapng/lemonldap-ng-controller:0.0.1
+          args:
+            - /lemonldap-ng-controller
+            - --alsologtostderr
+            - --configmap=$(POD_NAMESPACE)/lemonldap-ng-configuration
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
