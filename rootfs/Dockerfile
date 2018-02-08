@@ -24,6 +24,8 @@ RUN set -x && \
       libapache-session-browseable-perl \
       libdbd-pg-perl \
       liblasso-perl \
+      liblemonldap-ng-manager-perl \
+      liblemonldap-ng-portal-perl \
       libxml-libxml-perl \
       libxml-libxslt-perl \
       libxml-simple-perl \
