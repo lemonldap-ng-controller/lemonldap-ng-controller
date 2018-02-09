@@ -117,6 +117,16 @@ func (c *Config) Save() error {
 	}
 	conf["cfgAuthor"] = "lemonldap-ng-controller"
 	conf["cfgNum"] = nextConfigNum
+
+	// Replace default reload url
+	reloadUrls, ok := conf["reloadUrls"].(map[string]interface{})
+	if ok {
+		if _, ok = reloadUrls["reload.example.com"]; ok {
+			delete(reloadUrls, "reload.example.com")
+			reloadUrls["localhost"] = "http://localhost/reload"
+		}
+	}
+
 	allExportedHeaders, ok := conf["exportedHeaders"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("exportedHeaders should be a map, got %T", conf["exportedHeaders"])
