@@ -56,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Annotations - location-rules", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		time.Sleep(1 * time.Second) // FIXME wait for LLNG config reload
+		time.Sleep(2 * time.Second) // FIXME wait for LLNG config reload
 
 		resp, _, errs := gorequest.New().
 			Get(f.NginxHTTPURL).
@@ -89,7 +89,7 @@ var _ = framework.IngressNginxDescribe("Annotations - location-rules", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		time.Sleep(1 * time.Second) // FIXME wait for LLNG config reload
+		time.Sleep(2 * time.Second) // FIXME wait for LLNG config reload
 
 		resp, _, errs := gorequest.New().
 			Get(f.NginxHTTPURL).

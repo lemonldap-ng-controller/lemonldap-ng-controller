@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Portal URL", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		time.Sleep(1 * time.Second) // FIXME wait for LLNG config reload
+		time.Sleep(2 * time.Second) // FIXME wait for LLNG config reload
 
 		resp, _, errs := gorequest.New().
 			Get(f.NginxHTTPURL).
