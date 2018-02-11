@@ -47,7 +47,10 @@ func NewFilesystem() *Filesystem {
 	content := []byte(`{
 		"cfgNum": 1,
 		"exportedHeaders": {},
-		"locationRules": {}
+		"locationRules": {},
+		"reloadUrls": {
+			"reload.example.com" : "http://reload.example.com/reload"
+		}
 	}`)
 	fs.WriteFile("/var/lib/lemonldap-ng/conf/lmConf-1.js", content, 0644)
 	return fs

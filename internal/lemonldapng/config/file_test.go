@@ -24,6 +24,33 @@ import (
 	fakefs "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/fake"
 )
 
+func TestDefaultConfig(t *testing.T) {
+	flag.Set("alsologtostderr", "true")
+	fs := fakefs.NewFilesystem()
+	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
+
+	config.dirty = true
+	errSave2 := config.Save()
+	if errSave2 != nil {
+		t.Errorf("%s", errSave2)
+	}
+	lmConf2, err2 := fs.ReadFile("/var/lib/lemonldap-ng/conf/lmConf-2.js")
+	if err2 != nil {
+		t.Errorf("%s", err2)
+	}
+	for _, re := range []*regexp.Regexp{
+		regexp.MustCompile("\"cfgAuthor\": \"lemonldap-ng-controller\","),
+		regexp.MustCompile("\"cfgNum\": 2,"),
+		regexp.MustCompile(`"exportedHeaders": {},`),
+		regexp.MustCompile(`"locationRules": {}`),
+		regexp.MustCompile(`"reloadUrls": {\s*"localhost": "http://localhost/reload"\s*}`),
+	} {
+		if !re.Match(lmConf2) {
+			t.Errorf("lmConf-2.js to match %s\n%s", re, lmConf2)
+		}
+	}
+}
+
 func TestAddDeleteVhosts(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
 	fs := fakefs.NewFilesystem()
@@ -46,7 +73,7 @@ func TestAddDeleteVhosts(t *testing.T) {
 		regexp.MustCompile("\"cfgAuthor\": \"lemonldap-ng-controller\","),
 		regexp.MustCompile("\"cfgNum\": 2,"),
 		regexp.MustCompile(`"exportedHeaders": {\s*"test42.example.org": {\s*"Auth-User": "\$uid"\s*}\s*},`),
-		regexp.MustCompile(`"locationRules": {\s*"test42.example.org": {\s*"default": "accept"\s*}\s*}\s*}`),
+		regexp.MustCompile(`"locationRules": {\s*"test42.example.org": {\s*"default": "accept"\s*}\s*},`),
 	} {
 		if !re.Match(lmConf2) {
 			t.Errorf("lmConf-2.js to match %s\n%s", re, lmConf2)
