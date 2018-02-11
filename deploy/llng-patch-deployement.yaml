@@ -22,3 +22,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          volumeMounts:
+          - name: copy-portal-skins
+            mountPath: /srv/var/lib/lemonldap-ng/portal/skins
+        - name: nginx-ingress-controller
+          volumeMounts:
+          - name: copy-portal-skins
+            mountPath: /var/lib/lemonldap-ng/portal/skins
+      volumes:
+        - name: copy-portal-skins
+          emptyDir: {}
