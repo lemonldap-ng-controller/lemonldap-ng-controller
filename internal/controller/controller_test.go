@@ -100,7 +100,14 @@ func buildFakeClientSet() *fakeclient.Clientset {
 					Namespace: "test-ns",
 				},
 				Data: map[string]string{
-					"lmConf.js": `{"domain": "example.org"}`,
+					"domain": "example.org",
+					"globalStorageOptions.yaml": `DataSource: dbi:Pg:dbname=sessions;host=10.2.3.1
+UserName: lemonldapng
+Password: mysuperpassword
+TableName: sessions
+Commit: 1
+Index: _whatToTrace ipAddr`,
+					"unsupportedSuffix.raw": "should-be -ignored",
 				},
 			},
 		}},
@@ -199,6 +206,10 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			var /* const */ domainExampleOrgRE = regexp.MustCompile(`"domain": "example.org",`)
 			domainRE := domainNoneRE
 
+			var /* const */ globalStorageOptionsNoneRE = regexp.MustCompile(`"cfgNum": \d+,\s*"exportedHeaders`)
+			var /* const */ globalStorageOptionsPostgreRE = regexp.MustCompile(`},\s*"globalStorageOptions": {\s*"Commit": 1,\s*"DataSource": "dbi:Pg:dbname=sessions;host=10.2.3.1",\s*"Index": "_whatToTrace ipAddr",\s*"Password": "mysuperpassword",\s*"TableName": "sessions",\s*"UserName": "lemonldapng"\s*},\s*"locationRules": {`)
+			globalStorageOptionsRE := globalStorageOptionsNoneRE
+
 			var /* const */ exportedHeadersNoneRE = regexp.MustCompile(`"exportedHeaders": {}`)
 			var /* const */ exportedHeadersBothRE = regexp.MustCompile(`"exportedHeaders": {\s*"test1.example.org": {\s*"Auth-User": "\$uid"\s*},\s*"test2.example.org": {\s*"Auth-User": "\$uid"\s*}\s*}`)
 			//var /* const */ exportedHeadersTest1RE = regexp.MustCompile(`"exportedHeaders": {\s*"test1.example.org": {\s*"Auth-User": "\$uid"\s*}\s*}`)
@@ -216,6 +227,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			if namespace == "test-ns" || namespace == corev1.NamespaceAll || !forceNamespaceIsolation {
 				configNum++
 				domainRE = domainExampleOrgRE
+				globalStorageOptionsRE = globalStorageOptionsPostgreRE
 			}
 			// An ingress was created: test-ns/test-ingress2
 			if namespace == corev1.NamespaceAll || namespace == "test-ns" {
@@ -234,6 +246,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			checkLLConfig(t, ingressController, configNum, []*regexp.Regexp{
 				cfgNumRE,
 				domainRE,
+				globalStorageOptionsRE,
 				exportedHeadersRE,
 				locationRulesRE,
 			})
@@ -242,6 +255,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			if namespace == "test-ns" || namespace == corev1.NamespaceAll || !forceNamespaceIsolation {
 				configNum++
 				domainRE = domainNoneRE
+				globalStorageOptionsRE = globalStorageOptionsNoneRE
 			}
 			// An ingress was updated: test-ns/test-ingress2
 			if namespace == corev1.NamespaceAll || namespace == "test-ns" {
@@ -258,6 +272,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			checkLLConfig(t, ingressController, configNum, []*regexp.Regexp{
 				cfgNumRE,
 				domainRE,
+				globalStorageOptionsRE,
 				exportedHeadersRE,
 				locationRulesRE,
 			})
