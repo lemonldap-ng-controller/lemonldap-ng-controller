@@ -19,6 +19,7 @@ package controller
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
@@ -32,16 +33,22 @@ func (c *LemonLDAPNGController) parseConfigMap(obj interface{}) (namespace strin
 	if configMapKey != c.controllerConfig.ConfigMapName {
 		return configMapObj.Namespace, configMapObj.Name, false, nil, nil
 	}
-	lmConfYaml, ok := configMapObj.Data["lmConf.js"]
-	if !ok {
-		return configMapObj.Namespace, configMapObj.Name, true, nil, fmt.Errorf("Missing key in ConfigMap %s: %s", configMapKey, "lmConf.js")
+	overrides = make(map[string]interface{})
+	for k, v := range configMapObj.Data {
+		if strings.HasSuffix(k, ".yaml") {
+			vUnmarshaled := make(map[string]interface{})
+			err = yaml.Unmarshal([]byte(v), &vUnmarshaled)
+			if err != nil {
+				glog.Errorf("Unable to decode key %s in ConfigMap %s: %s", k, configMapKey, err)
+			}
+			overrides[strings.TrimSuffix(k, ".yaml")] = vUnmarshaled
+		} else if strings.Contains(k, ".") {
+			glog.Errorf("Unsupported suffix for key %s in ConfigMap %s: %s", k, configMapKey, "Use .yaml or none")
+		} else {
+			overrides[k] = v
+		}
 	}
-	lmConf := make(map[string]interface{})
-	err = yaml.Unmarshal([]byte(lmConfYaml), &lmConf)
-	if err != nil {
-		return configMapObj.Namespace, configMapObj.Name, true, nil, fmt.Errorf("Unable to parse lmConf.js of ConfigMap %s: %s", configMapKey, err)
-	}
-	return configMapObj.Namespace, configMapObj.Name, true, lmConf, nil
+	return configMapObj.Namespace, configMapObj.Name, true, overrides, nil
 }
 
 func (c *LemonLDAPNGController) configMapAdded(obj interface{}) {
