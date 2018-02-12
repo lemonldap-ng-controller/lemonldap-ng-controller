@@ -18,10 +18,16 @@ See [Deployment](deploy/README.md).
 
 The following annotations are supported:
 
-| Name                                                                        | type   |
-|-----------------------------------------------------------------------------|--------|
-|[kubernetes-controller.lemonldap-ng.org/location-rules](#location-rules)     | string |
-|[kubernetes-controller.lemonldap-ng.org/exported-headers](#exported-headers) | string |
+| Name                                                                          | type   |
+|-------------------------------------------------------------------------------|--------|
+|[kubernetes-controller.lemonldap-ng.org/location-rules](#location-rules)       | string |
+|[kubernetes-controller.lemonldap-ng.org/exported-headers](#exported-headers)   | string |
+|[kubernetes-controller.lemonldap-ng.org/application-category](#application)    | string |
+|[kubernetes-controller.lemonldap-ng.org/application-name](#application)        | string |
+|[kubernetes-controller.lemonldap-ng.org/application-description](#application) | string |
+|[kubernetes-controller.lemonldap-ng.org/application-logo](#application)        | string |
+|[kubernetes-controller.lemonldap-ng.org/application-display](#application)     | string |
+|[kubernetes-controller.lemonldap-ng.org/application-uri](#application)         | string |
 
 ### location-rules
 
@@ -69,6 +75,31 @@ kubernetes-controller.lemonldap-ng.org/exported-headers: |
 ```
 
 See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentation/1.9/writingrulesand_headers#headers).
+
+### <a name="application"></a>application-category, application-name, application-description, application-logo, application-display, application-uri
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes-controller.lemonldap-ng.org/application-category: "1apps"
+    kubernetes-controller.lemonldap-ng.org/application-name: "MyApp"
+    kubernetes-controller.lemonldap-ng.org/application-description: "My Application to do things"
+    kubernetes-controller.lemonldap-ng.org/application-logo: "thumbnail.png"
+    kubernetes-controller.lemonldap-ng.org/application-display: auto
+    kubernetes-controller.lemonldap-ng.org/application-uri: "http://app.example.org/"
+```
+
+If `application-category` or `application-name` are not specified in the Ingress, no application is created.
+
+The other annotations defaults to:
+- `application-description`: Same as `application-name`
+- `application-logo`: "gear.png" ([other images](https://gitlab.ow2.org/lemonldap-ng/lemonldap-ng/tree/v1.9/lemonldap-ng-portal/example/skins/common/apps) are available)
+- `application-display`: "auto" (other values: `on` or `off`)
+- `application-uri`: Url built from first HTTP Ingress rule.
+
+See also [LemonLDAP::NG documentation](https://lemonldap-ng.org/documentation/1.9/portalmenu#categories_and_applications).
 
 ## Config Map
 

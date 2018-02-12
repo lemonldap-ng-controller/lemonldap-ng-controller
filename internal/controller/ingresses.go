@@ -29,7 +29,7 @@ import (
 )
 
 // parseIngress returns the ingress namespace, the ingress name, and a map of VHosts
-func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, map[string]*llngconfig.VHost, error) {
+func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, map[string]*llngconfig.VHost, *llngconfig.Application, error) {
 	ingressObj := obj.(*extensionsv1beta1.Ingress)
 	ingressNamespace := ingressObj.Namespace
 	ingressName := ingressObj.Name
@@ -42,7 +42,7 @@ func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, m
 	if ok {
 		err := yaml.Unmarshal([]byte(locationRulesYaml), &locationRules)
 		if err != nil {
-			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse locationRules annotation %s of Ingress %s/%s, ignoring Ingress: %s", locationRulesAnnotation, ingressNamespace, ingressName, err)
+			return ingressNamespace, ingressName, vhosts, nil, fmt.Errorf("Unable to parse locationRules annotation %s of Ingress %s/%s, ignoring Ingress: %s", locationRulesAnnotation, ingressNamespace, ingressName, err)
 		}
 	} else {
 		locationRules = llngconfig.DefaultLocationRules
@@ -54,12 +54,13 @@ func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, m
 	if ok {
 		err := yaml.Unmarshal([]byte(exportedHeadersYaml), &exportedHeaders)
 		if err != nil {
-			return ingressNamespace, ingressName, vhosts, fmt.Errorf("Unable to parse exportedHeaders annotation %s of Ingress %s/%s, ignoring Ingress: %s", exportedHeadersAnnotation, ingressNamespace, ingressName, err)
+			return ingressNamespace, ingressName, vhosts, nil, fmt.Errorf("Unable to parse exportedHeaders annotation %s of Ingress %s/%s, ignoring Ingress: %s", exportedHeadersAnnotation, ingressNamespace, ingressName, err)
 		}
 	} else {
 		exportedHeaders = llngconfig.DefaultExportedHeaders
 	}
 
+	var firstVhost *llngconfig.VHost
 	for _, rule := range ingressObj.Spec.Rules {
 		serverName := rule.Host
 		if serverName == "" || serverName == "*" {
@@ -69,18 +70,24 @@ func (c *LemonLDAPNGController) parseIngress(obj interface{}) (string, string, m
 			continue
 		}
 		vhosts[serverName] = llngconfig.NewVHost(serverName, locationRules, exportedHeaders)
+		if firstVhost == nil {
+			firstVhost = vhosts[serverName]
+		}
 	}
-	return ingressNamespace, ingressName, vhosts, nil
+
+	application := llngconfig.NewApplication(firstVhost, ingressAnnotations, "kubernetes-controller.lemonldap-ng.org")
+	return ingressNamespace, ingressName, vhosts, application, nil
 }
 
 func (c *LemonLDAPNGController) ingressAdded(obj interface{}) {
-	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
+	ingressNamespace, ingressName, vhosts, application, err := c.parseIngress(obj)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
 	glog.Infof("An ingress was created: %s/%s", ingressNamespace, ingressName)
 	c.llngConfig.AddVhosts(vhosts)
+	c.llngConfig.AddApplication(application)
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)
@@ -89,13 +96,14 @@ func (c *LemonLDAPNGController) ingressAdded(obj interface{}) {
 }
 
 func (c *LemonLDAPNGController) ingressDeleted(obj interface{}) {
-	ingressNamespace, ingressName, vhosts, err := c.parseIngress(obj)
+	ingressNamespace, ingressName, vhosts, application, err := c.parseIngress(obj)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
 	glog.Infof("An ingress was deleted: %s/%s", ingressNamespace, ingressName)
 	c.llngConfig.DeleteVhosts(vhosts)
+	c.llngConfig.DeleteApplication(application)
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)
@@ -104,22 +112,26 @@ func (c *LemonLDAPNGController) ingressDeleted(obj interface{}) {
 }
 
 func (c *LemonLDAPNGController) ingressUpdated(old, cur interface{}) {
-	_, _, oldVhosts, err := c.parseIngress(old)
+	_, _, oldVhosts, oldApplication, err := c.parseIngress(old)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
-	curIngressNamespace, curIngressName, curVhosts, err := c.parseIngress(cur)
+	curIngressNamespace, curIngressName, curVhosts, curApplication, err := c.parseIngress(cur)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
-	if reflect.DeepEqual(oldVhosts, curVhosts) {
-		return
+	if !reflect.DeepEqual(oldVhosts, curVhosts) {
+		glog.Infof("An ingress was updated (vhosts): %s/%s", curIngressNamespace, curIngressName)
+		c.llngConfig.DeleteVhosts(oldVhosts)
+		c.llngConfig.AddVhosts(curVhosts)
 	}
-	glog.Infof("An ingress was updated: %s/%s", curIngressNamespace, curIngressName)
-	c.llngConfig.DeleteVhosts(oldVhosts)
-	c.llngConfig.AddVhosts(curVhosts)
+	if !reflect.DeepEqual(oldApplication, curApplication) {
+		glog.Infof("An ingress was updated (application): %s/%s", curIngressNamespace, curIngressName)
+		c.llngConfig.DeleteApplication(oldApplication)
+		c.llngConfig.AddApplication(curApplication)
+	}
 	err = c.llngConfig.Save() // FIXME async + batch
 	if err != nil {
 		glog.Error(err)

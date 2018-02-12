@@ -31,22 +31,24 @@ var validConfigurationName = regexp.MustCompile(`^lmConf-(\d+)\.js$`)
 type Config struct {
 	sync.RWMutex
 
-	fs        filesystem.Filesystem
-	configDir string
-	cfgNum    int
-	overrides map[string]interface{}
-	vhosts    map[string]*VHost
-	dirty     bool
+	fs           filesystem.Filesystem
+	configDir    string
+	cfgNum       int
+	overrides    map[string]interface{}
+	vhosts       map[string]*VHost
+	applications map[string]*Application
+	dirty        bool
 }
 
 // NewConfig creates a new LemonLDAP::NG configuration loader
 func NewConfig(fs filesystem.Filesystem, configDir string) *Config {
 	return &Config{
-		fs:        fs,
-		configDir: configDir,
-		cfgNum:    1,
-		overrides: make(map[string]interface{}),
-		vhosts:    make(map[string]*VHost),
+		fs:           fs,
+		configDir:    configDir,
+		cfgNum:       1,
+		overrides:    make(map[string]interface{}),
+		vhosts:       make(map[string]*VHost),
+		applications: make(map[string]*Application),
 	}
 }
 
@@ -139,6 +141,31 @@ func (c *Config) Save() error {
 		allExportedHeaders[serverName] = vhost.ExportedHeaders
 		allLocationRules[serverName] = vhost.LocationRules
 	}
+
+	allApplications, ok := conf["applicationList"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("applicationList should be a map, got %T", conf["applicationList"])
+	}
+	for _, a := range c.applications {
+		var cat map[string]interface{}
+		cat, ok = allApplications[a.Category].(map[string]interface{})
+		if !ok {
+			cat = make(map[string]interface{})
+			cat["type"] = "category"
+			cat["catname"] = a.Category
+			allApplications[a.Category] = cat
+		}
+		cat[a.Name] = map[string]interface{}{
+			"type": "application",
+			"options": map[string]string{
+				"description": a.Description,
+				"display":     a.Display,
+				"logo":        a.Logo,
+				"name":        a.Name,
+				"uri":         a.URI,
+			},
+		}
+	}
 	content, err := json.MarshalIndent(conf, "", "   ")
 	if err != nil {
 		return fmt.Errorf("Unable to encode LemonLDAP::NG configuration file %s: %s", nextConfigName, err)
@@ -219,6 +246,30 @@ func (c *Config) DeleteVhosts(vhosts map[string]*VHost) error {
 	for _, vhost := range vhosts {
 		delete(c.vhosts, vhost.ServerName)
 	}
+	c.dirty = true
+	return nil
+}
+
+// AddApplication creates a new LemonLDAP::NG application
+func (c *Config) AddApplication(application *Application) error {
+	if application == nil {
+		return nil
+	}
+	c.Lock()
+	defer c.Unlock()
+	c.applications[application.Path()] = application
+	c.dirty = true
+	return nil
+}
+
+// DeleteApplication a LemonLDAP::NG application
+func (c *Config) DeleteApplication(application *Application) error {
+	if application == nil {
+		return nil
+	}
+	c.Lock()
+	defer c.Unlock()
+	delete(c.applications, application.Path())
 	c.dirty = true
 	return nil
 }
