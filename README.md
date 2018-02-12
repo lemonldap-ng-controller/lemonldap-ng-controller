@@ -74,7 +74,7 @@ See also [LemonLDAP::NG documentation](https://www.lemonldap-ng.org/documentatio
 
 A config map can be used to override lmConf-1.js parameters.
 
-YAML or JSON are supported:
+Any key suffixed by `.yaml` will be parsed accordingly:
 
 ```yaml
 kind: ConfigMap
@@ -83,8 +83,15 @@ metadata:
   name: lemonldap-ng-configuration
   namespace: ingress-nginx
 data:
-  lmConf.js: |
-    domain: example.org
+  domain: example.org
+  globalStorage: Apache::Session::Browseable::Postgres # Default Apache::Session::File
+  globalStorageOptions.yaml: |
+    DataSource: dbi:Pg:dbname=sessions;host=10.2.3.1
+    UserName: lemonldapng
+    Password: mysuperpassword
+    TableName: sessions
+    Commit: 1
+    Index: _whatToTrace ipAddr
 ```
 
 This is the most difficult part of LemonLDAP::NG configuration.

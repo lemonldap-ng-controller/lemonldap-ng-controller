@@ -44,8 +44,8 @@ var _ = framework.IngressNginxDescribe("Portal URL", func() {
 	It("should respect portal parameter", func() {
 		host := "goto-portal.example.com"
 
-		setting := "lmConf.js"
-		oldValue := updateConfigmap(setting, "portal: http://portal.example.com/", f.KubeClientSet)
+		setting := "portal"
+		oldValue := updateConfigmap(setting, "http://portal.example.com/", f.KubeClientSet)
 		defer updateConfigmap(setting, oldValue, f.KubeClientSet)
 
 		bi := buildIngress(host, f.Namespace.Name)
