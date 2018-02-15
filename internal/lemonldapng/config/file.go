@@ -224,8 +224,8 @@ func (c *Config) SetOverrides(overrides map[string]interface{}) error {
 	return nil
 }
 
-// AddVhosts creates several new LemonLDAP::NG virtual hosts
-func (c *Config) AddVhosts(vhosts map[string]*VHost) error {
+// AddVHosts creates several new LemonLDAP::NG virtual hosts
+func (c *Config) AddVHosts(vhosts map[string]*VHost) error {
 	c.Lock()
 	defer c.Unlock()
 	for _, vhost := range vhosts {
@@ -239,8 +239,8 @@ func (c *Config) AddVhosts(vhosts map[string]*VHost) error {
 	return nil
 }
 
-// DeleteVhosts deletes several LemonLDAP::NG virtual hosts
-func (c *Config) DeleteVhosts(vhosts map[string]*VHost) error {
+// DeleteVHosts deletes several LemonLDAP::NG virtual hosts
+func (c *Config) DeleteVHosts(vhosts map[string]*VHost) error {
 	c.Lock()
 	defer c.Unlock()
 	for _, vhost := range vhosts {
