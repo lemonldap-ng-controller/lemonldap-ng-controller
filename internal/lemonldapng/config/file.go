@@ -174,6 +174,11 @@ func stringifyYAMLMapKeys(in interface{}) interface{} {
 			res[fmt.Sprintf("%v", k)] = stringifyYAMLMapKeys(v)
 		}
 		return res
+	case map[string]interface{}:
+		for k, v := range in {
+			in[k] = stringifyYAMLMapKeys(v)
+		}
+		return in
 	default:
 		return in
 	}
