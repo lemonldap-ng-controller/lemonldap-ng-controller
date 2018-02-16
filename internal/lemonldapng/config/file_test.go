@@ -51,7 +51,7 @@ func TestDefaultConfig(t *testing.T) {
 	}
 }
 
-func TestAddDeleteVhosts(t *testing.T) {
+func TestAddDeleteVHosts(t *testing.T) {
 	flag.Set("alsologtostderr", "true")
 	fs := fakefs.NewFilesystem()
 	config := NewConfig(fs, "/var/lib/lemonldap-ng/conf")
@@ -60,7 +60,7 @@ func TestAddDeleteVhosts(t *testing.T) {
 		"test42.example.org": NewVHost("test42.example.org", DefaultLocationRules, DefaultExportedHeaders),
 	}
 
-	config.AddVhosts(vhosts)
+	config.AddVHosts(vhosts)
 	errSave2 := config.Save()
 	if errSave2 != nil {
 		t.Errorf("%s", errSave2)
@@ -80,7 +80,7 @@ func TestAddDeleteVhosts(t *testing.T) {
 		}
 	}
 
-	config.DeleteVhosts(vhosts)
+	config.DeleteVHosts(vhosts)
 	errSave3 := config.Save()
 	if errSave3 != nil {
 		t.Errorf("%s", errSave3)

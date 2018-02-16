@@ -14,8 +14,8 @@ data:
 
   # Portal URL
   portal: http://auth.example.org/
-  mailUrl : http://auth.example.org/mail.pl
-  registerUrl : http://auth.example.org/register.pl
+  mailUrl: http://auth.example.org/mail.pl
+  registerUrl: http://auth.example.org/register.pl
   # https: "1" # recommended, to force HTTPs
 
   # Authentification, user and password backends
@@ -34,3 +34,52 @@ data:
   #   TableName: sessions
   #   Commit: "1"
   #   Index: _whatToTrace ipAddr
+
+  # Portal Menu
+  applicationList.yaml: |
+    "2administration":
+      type: category
+      catname: "Administration"
+      "manager":
+        type: application
+        options:
+          description: "Configure LemonLDAP::NG WebSSO"
+          display: auto
+          logo: "configure.png"
+          name: "WebSSO Manager"
+          uri: "http://manager.example.org/manager.html"
+      "notifications":
+        type: application
+        options:
+          description: "Explore WebSSO notifications"
+          display: auto
+          logo: "database.png"
+          name: "Notifications explorer"
+          uri: "http://manager.example.org/notifications.html"
+      "sessions":
+        type: application
+        options:
+          description: "Explore WebSSO sessions"
+          display: auto
+          logo: "database.png"
+          name: "Sessions explorer"
+          uri: "http://manager.example.org/sessions.html"
+    "3documentation":
+      type: category
+      catname: "Documentation"
+      "localdoc":
+        type: application
+        options:
+          description: "Documentation supplied with LemonLDAP::NG"
+          display: on
+          logo: "help.png"
+          name: "Local documentation"
+          uri: "http://manager.example.org/doc/"
+      "officialwebsite":
+        type: application
+        options:
+          description: "Official LemonLDAP::NG Website"
+          display: on
+          logo: "network.png"
+          name: "Offical Website"
+          uri: "http://lemonldap-ng.org/"

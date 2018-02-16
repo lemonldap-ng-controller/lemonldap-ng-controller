@@ -42,7 +42,9 @@ func buildFakeClientSet() *fakeclient.Clientset {
 					Name:      "test-ingress1",
 					Namespace: corev1.NamespaceDefault,
 					Annotations: map[string]string{
-						"kubernetes-controller.lemonldap-ng.org/location-rules": `{"^/admin/": "$uid eq \"bart.simpson\"","default": "accept"}`,
+						"kubernetes-controller.lemonldap-ng.org/location-rules":       `{"^/admin/": "$uid eq \"bart.simpson\"","default": "accept"}`,
+						"kubernetes-controller.lemonldap-ng.org/application-category": `10apps`,
+						"kubernetes-controller.lemonldap-ng.org/application-name":     `Test ingress 1`,
 					},
 				},
 				Spec: extensionsv1beta1.IngressSpec{
@@ -206,6 +208,10 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			var /* const */ domainExampleOrgRE = regexp.MustCompile(`"domain": "example.org",`)
 			domainRE := domainNoneRE
 
+			var /* const */ applicationListNoneRE = regexp.MustCompile(`"applicationList": {},`)
+			var /* const */ applicationListTest1RE = regexp.MustCompile(`"applicationList": {\s*"10apps": {\s*"Test ingress 1": {\s*"options": {\s*"description": "Test ingress 1",\s*"display": "auto",\s*"logo": "gear.png",\s*"name": "Test ingress 1",\s*"uri": "https://test1.example.org/"\s*},\s*"type": "application"\s*},\s*"catname": "10apps",\s*"type": "category"\s*}\s*},\s*"cfgAuthor"`)
+			applicationListRE := applicationListNoneRE
+
 			var /* const */ globalStorageOptionsNoneRE = regexp.MustCompile(`"cfgNum": \d+,\s*"exportedHeaders`)
 			var /* const */ globalStorageOptionsPostgreRE = regexp.MustCompile(`},\s*"globalStorageOptions": {\s*"Commit": 1,\s*"DataSource": "dbi:Pg:dbname=sessions;host=10.2.3.1",\s*"Index": "_whatToTrace ipAddr",\s*"Password": "mysuperpassword",\s*"TableName": "sessions",\s*"UserName": "lemonldapng"\s*},\s*"locationRules": {`)
 			globalStorageOptionsRE := globalStorageOptionsNoneRE
@@ -238,6 +244,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			// An ingress was created: default/test-ingress1
 			if namespace == corev1.NamespaceAll {
 				configNum++
+				applicationListRE = applicationListTest1RE
 				exportedHeadersRE = exportedHeadersBothRE
 				locationRulesRE = locationRulesBothRE
 			}
@@ -246,6 +253,7 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			checkLLConfig(t, ingressController, configNum, []*regexp.Regexp{
 				cfgNumRE,
 				domainRE,
+				applicationListRE,
 				globalStorageOptionsRE,
 				exportedHeadersRE,
 				locationRulesRE,
@@ -266,12 +274,14 @@ func TestNewLemonLDAPNGController(t *testing.T) {
 			// An ingress was deleted: default/test-ingress1
 			if namespace == corev1.NamespaceAll {
 				configNum++
+				applicationListRE = applicationListNoneRE
 			}
 
 			cfgNumRE = regexp.MustCompile(fmt.Sprintf("\"cfgNum\": %d,", configNum))
 			checkLLConfig(t, ingressController, configNum, []*regexp.Regexp{
 				cfgNumRE,
 				domainRE,
+				applicationListRE,
 				globalStorageOptionsRE,
 				exportedHeadersRE,
 				locationRulesRE,

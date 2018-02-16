@@ -45,6 +45,7 @@ func NewFilesystem() *Filesystem {
 	fs.Mkdir("/var/lib/lemonldap-ng", 0755)
 	fs.Mkdir("/var/lib/lemonldap-ng/conf", 0755)
 	content := []byte(`{
+		"applicationList": {},
 		"cfgNum": 1,
 		"exportedHeaders": {},
 		"locationRules": {},
