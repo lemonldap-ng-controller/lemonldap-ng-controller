@@ -6,7 +6,7 @@
 
 ## Description
 
-This repository contains the LemonLDAP::NG controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the LemonLDAP configuration.
+This repository contains the [LemonLDAP::NG](https://lemonldap-ng.org/) controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the LemonLDAP configuration.
 
 It is intended to be used with the [NGINX Ingress Controller](https://github.com/kubernetes/ingress-nginx).
 
