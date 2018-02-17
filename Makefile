@@ -18,7 +18,7 @@ all: all-container
 
 BUILDTAGS=
 
-TAG?=0.2.0
+TAG?=0.3.0-dev
 REGISTRY?=lemonldapng
 GOOS?=linux
 DOCKER?=gcloud docker --
