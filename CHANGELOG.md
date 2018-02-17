@@ -1,6 +1,33 @@
 # Change Log
 
+## [0.2.0](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/tree/0.2.0) (2018-02-17)
+
+[Full Changelog](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/compare/0.1.0...0.2.0)
+
+**Breaking changes:**
+
+- Change the ConfigMap [\#56](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/56)
+- Change the ConfigMap format and move LemonLDAP::NG keys just below Data [\#59](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/59) ([sathieu](https://github.com/sathieu))
+
+**Implemented enhancements:**
+
+- LemonLDAP::NG portal menu \(applications\) from ingresses [\#32](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/32)
+- Use latest image [\#64](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/64) ([sathieu](https://github.com/sathieu))
+- Add LemonLDAP::NG URL [\#63](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/63) ([sathieu](https://github.com/sathieu))
+- LemonLDAP::NG portal menu \(applications\) from ingresses [\#62](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/62) ([sathieu](https://github.com/sathieu))
+- Move $COVERALLS\_TOKEN to repository settings [\#58](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/58) ([sathieu](https://github.com/sathieu))
+- Replace default reload url [\#48](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/48) ([sathieu](https://github.com/sathieu))
+- apt-get install --no-install-recommends [\#47](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/47) ([sathieu](https://github.com/sathieu))
+- Add portal and manager [\#46](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/46) ([sathieu](https://github.com/sathieu))
+
+**Fixed bugs:**
+
+- Ensure stringifyYAMLMapKeys converts root keys [\#65](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/65) ([sathieu](https://github.com/sathieu))
+
 ## [0.1.0](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/tree/0.1.0) (2018-02-11)
+
+[Full Changelog](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/compare/9bf454b990a5a2f27c19d14d2f3c1e3fcb1c8eb7...0.1.0)
+
 **Implemented enhancements:**
 
 - Avoid unnecessary lmConf updates [\#31](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/31)
@@ -8,7 +35,7 @@
 - Add step-by-step documentation [\#27](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/27)
 - Include some optional dependencies in the image [\#43](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/43) ([sathieu](https://github.com/sathieu))
 - Process [\#39](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/39) ([sathieu](https://github.com/sathieu))
-- Renames [\#37](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/37) ([sathieu](https://github.com/sathieu))
+- Rename IngressController LemonLDAPNGController and move file to internal directory [\#37](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/37) ([sathieu](https://github.com/sathieu))
 - Tests for pkg/controller [\#24](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/24) ([sathieu](https://github.com/sathieu))
 - Coveralls integration [\#18](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/18) ([sathieu](https://github.com/sathieu))
 - End-to-end tests [\#7](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/7) ([sathieu](https://github.com/sathieu))
@@ -16,9 +43,7 @@
 **Fixed bugs:**
 
 - lmConf updates should reload LemonLDAP::NG [\#41](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/41)
-- Avoid unnecessary lmConf updates [\#31](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/31)
 - Fix dataraces [\#29](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/29)
-- Launch the /usr/sbin/llng-fastcgi-server process [\#28](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/issues/28)
 - Run flaky tests at most 5 times [\#54](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/54) ([sathieu](https://github.com/sathieu))
 - Wait LemonLDAP::NG a bit longer [\#51](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/51) ([sathieu](https://github.com/sathieu))
 - Avoid unnecessary lmConf updates [\#42](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/42) ([sathieu](https://github.com/sathieu))
@@ -42,7 +67,7 @@
 - Log when config save is failing [\#16](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/16) ([sathieu](https://github.com/sathieu))
 - Add ConfigMap support [\#15](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/15) ([sathieu](https://github.com/sathieu))
 - Use simpler ListWatch hooking [\#14](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/14) ([sathieu](https://github.com/sathieu))
-- Tests [\#13](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/13) ([sathieu](https://github.com/sathieu))
+- Initial tests [\#13](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/13) ([sathieu](https://github.com/sathieu))
 - Handle locationRules [\#12](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/12) ([sathieu](https://github.com/sathieu))
 - Fix lmConf-{num}.js Sprintf [\#11](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/11) ([sathieu](https://github.com/sathieu))
 - LemonLDAP::NG configuration handling [\#10](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller/pull/10) ([sathieu](https://github.com/sathieu))
