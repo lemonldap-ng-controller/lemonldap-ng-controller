@@ -19,6 +19,7 @@ package main
 
 import (
 	goflag "flag"
+	"os"
 	"time"
 
 	"github.com/golang/glog"
@@ -32,14 +33,16 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/controller"
-	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/os"
+	fsos "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/os"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/lemonldapng/converter"
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/signals"
 )
 
 var (
 	config *controller.Configuration = &controller.Configuration{
-		FS: &os.Filesystem{},
+		FS: &fsos.Filesystem{},
 	}
+	convertMode bool
 )
 
 func main() {
@@ -60,6 +63,15 @@ func main() {
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
+
+	if convertMode {
+		err := converter.Run(config.ConfigMapName, os.Stdin, os.Stdout)
+		if err != nil {
+			glog.Error(err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	cfg, err := clientcmd.BuildConfigFromFlags(config.APIServerHost, config.KubeConfigFile)
 	if err != nil {
@@ -91,4 +103,5 @@ func init() {
 	flag.StringVar(&config.Namespace, "watch-namespace", corev1.NamespaceAll, "Namespace to watch for Ingress. Default is to watch all namespaces")
 	flag.BoolVar(&config.ForceNamespaceIsolation, "force-namespace-isolation", false, "Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace")
 	flag.StringVar(&config.LemonLDAPConfigurationDirectory, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory")
+	flag.BoolVar(&convertMode, "convert", false, "Convert lmConf-n.js from standard input to ConfigMap")
 }
