@@ -138,12 +138,15 @@ Note: Make sure to have the following to arg in the deployement:
 - --configmap=ingress-nginx/lemonldap-ng-configuration
 ```
 
+You can convert an existing configuration to ConfigMap with [Convert mode](#convert-mode).
+
 ## Command line flags
 
 ```
 Usage of /lemonldap-ng-controller:
       --alsologtostderr                               log to standard error as well as files
       --configmap string                              Name of the ConfigMap that contains the custom configuration to use
+      --convert                                       Convert lmConf-n.js from standard input to ConfigMap
       --force-namespace-isolation                     Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace
       --kubeconfig string                             Path to a kubeconfig. Only required if out-of-cluster
       --lemonldap-ng-configuration-directory string   LemonLDAP::NG configuration directory (default "/var/lib/lemonldap-ng/conf")
@@ -156,4 +159,14 @@ Usage of /lemonldap-ng-controller:
   -v, --v Level                                       log level for V logs
       --vmodule moduleSpec                            comma-separated list of pattern=N settings for file-filtered logging
       --watch-namespace string                        Namespace to watch for Ingress. Default is to watch all namespaces
+```
+
+### Convert mode
+
+If you have an existing configuration, convert it with `--convert`:
+
+```
+cat lmConf-42.js | \
+  lemonldap-ng-controller --convert --configmap=ingress-nginx/lemonldap-ng-configuration | \
+  kubectl apply -f
 ```
