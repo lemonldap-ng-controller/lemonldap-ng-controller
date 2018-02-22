@@ -33,7 +33,6 @@ for entry in \
   'k8s.io/ingress-nginx/deploy/udp-services-configmap.yaml deploy' \
   'k8s.io/ingress-nginx/deploy/without-rbac.yaml deploy' \
   'k8s.io/ingress-nginx/deploy/provider/baremetal/service-nodeport.yaml deploy/provider/baremetal' \
-  'k8s.io/ingress-nginx/.github/* .github' \
   'k8s.io/ingress-nginx/hack/kube-env.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-all.sh hack' \
   'k8s.io/ingress-nginx/hack/verify-gofmt.sh hack' \
