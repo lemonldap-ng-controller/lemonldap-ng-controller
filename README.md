@@ -157,6 +157,7 @@ Usage of /lemonldap-ng-controller:
       --stderrthreshold severity                      logs at or above this threshold go to stderr (default 2)
       --sync-period duration                          Relist and confirm cloud resources this often (default 10m0s)
   -v, --v Level                                       log level for V logs
+      --version                                       Shows release information about the LemonLDAP::NG controller
       --vmodule moduleSpec                            comma-separated list of pattern=N settings for file-filtered logging
       --watch-namespace string                        Namespace to watch for Ingress. Default is to watch all namespaces
 ```

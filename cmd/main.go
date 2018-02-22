@@ -19,6 +19,7 @@ package main
 
 import (
 	goflag "flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -36,6 +37,7 @@ import (
 	fsos "github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/filesystem/os"
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/lemonldapng/converter"
 	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/internal/signals"
+	"github.com/lemonldap-ng-controller/lemonldap-ng-controller/version"
 )
 
 var (
@@ -43,6 +45,7 @@ var (
 		FS: &fsos.Filesystem{},
 	}
 	convertMode bool
+	versionMode bool
 )
 
 func main() {
@@ -63,6 +66,12 @@ func main() {
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
+
+	if versionMode {
+		fmt.Println(version.String())
+		return
+	}
+	glog.Infof(version.Short())
 
 	if convertMode {
 		err := converter.Run(config.ConfigMapName, os.Stdin, os.Stdout)
@@ -104,4 +113,5 @@ func init() {
 	flag.BoolVar(&config.ForceNamespaceIsolation, "force-namespace-isolation", false, "Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace")
 	flag.StringVar(&config.LemonLDAPConfigurationDirectory, "lemonldap-ng-configuration-directory", "/var/lib/lemonldap-ng/conf", "LemonLDAP::NG configuration directory")
 	flag.BoolVar(&convertMode, "convert", false, "Convert lmConf-n.js from standard input to ConfigMap")
+	flag.BoolVar(&versionMode, "version", false, "Shows release information about the LemonLDAP::NG controller")
 }
