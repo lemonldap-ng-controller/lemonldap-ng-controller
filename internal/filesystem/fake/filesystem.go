@@ -194,7 +194,7 @@ func (ff *File) ModTime() time.Time {
 }
 
 // IsDir returns true if directory
-func (ff File) IsDir() bool {
+func (ff *File) IsDir() bool {
 	ff.RLock()
 	defer ff.RUnlock()
 	return ff.isDir
