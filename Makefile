@@ -164,6 +164,10 @@ cover:
 	gover
 	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken $$COVERALLS_TOKEN
 
+.PHONY: vet
+vet:
+	@go vet $(shell go list ${PKG}/... | grep -v vendor)
+
 .PHONY: release
 release: all-container all-push
 	echo "done"
