@@ -29,6 +29,12 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
+REPO_INFO=$(shell git config --get remote.origin.url)
+
+ifndef COMMIT
+  COMMIT := git-$(shell git rev-parse --short HEAD)
+endif
+
 PKG=github.com/lemonldap-ng-controller/lemonldap-ng-controller
 
 ARCH ?= $(shell go env GOARCH)
@@ -130,7 +136,7 @@ clean:
 .PHONY: build
 build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
-		-ldflags "-s -w" \
+		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
 		-o ${TEMP_DIR}/rootfs/lemonldap-ng-controller ${PKG}/cmd
 
 .PHONY: verify-all
@@ -139,7 +145,6 @@ verify-all:
 
 .PHONY: test
 test:
-	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
 .PHONY: e2e-image
