@@ -1,5 +1,8 @@
 # LemonLDAP::NG controller
 
+> ⚠️ This repo is unmaintained since 2018 ⚠️
+
+
 [![Build Status](https://travis-ci.org/lemonldap-ng-controller/lemonldap-ng-controller.svg?branch=master)](https://travis-ci.org/lemonldap-ng-controller/lemonldap-ng-controller)
 [![Coverage Status](https://coveralls.io/repos/github/lemonldap-ng-controller/lemonldap-ng-controller/badge.svg?branch=master)](https://coveralls.io/github/lemonldap-ng-controller/lemonldap-ng-controller?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lemonldap-ng-controller/lemonldap-ng-controller)](https://goreportcard.com/report/github.com/lemonldap-ng-controller/lemonldap-ng-controller)
